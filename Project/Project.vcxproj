@@ -199,6 +199,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\project1.cpp" />
     <ClCompile Include="src\project_example.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -231,6 +232,7 @@
     <ClInclude Include="inc\map_range.hpp" />
     <ClInclude Include="inc\pch.hpp" />
     <ClInclude Include="inc\project.hpp" />
+    <ClInclude Include="inc\project1.hpp" />
     <ClInclude Include="inc\project_example.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

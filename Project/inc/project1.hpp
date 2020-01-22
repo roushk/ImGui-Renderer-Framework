@@ -1,11 +1,12 @@
 #pragma once
 #include "application.hpp"
 
+struct ControlPoint { float x = 1.f, y = 1.f; };
 
-class ProjectExample : public Project
+class Project1 : public Project
 {
 public:
-  ProjectExample();
+  Project1();
 
   void draw() final override;
   void draw_editors() final override;
@@ -17,13 +18,15 @@ public:
 
 private:
   bool drawBox = true, toggleDrawBox = true;
+  int degree = 1;
+
   float boxRounding = 5.0f;
   float boxThickness = 5.0f;
   bool drawCircle = true, toggleDrawCircle = true;
   float circleRadius = 15.f;
   int circleDivisions = 128;
   bool showMousePosition = true;
-  //std::vector<ControlPoint> controlPoints{ ControlPoint{2.5f, 1.f}, ControlPoint{5.f, 1.f}, ControlPoint{7.5f, 1.f} };
+  std::vector<ControlPoint> controlPoints{ ControlPoint{2.5f, 1.f}, ControlPoint{5.f, 1.f}, ControlPoint{7.5f, 1.f} };
 
   // A set of solid colors for drawing onto a dark gray background
   const ImVec4 colorSoftLightGray = { 0.9f, 0.9f, 0.9f, 0.415f };

@@ -1,17 +1,19 @@
 #include <pch.hpp>
-#include "project_example.hpp"
+#include "project1.hpp"
 
 #include "imgui_distance.hpp"
 #include "imgui_disabled.hpp"
 #include "imgui_control_point.hpp"
 
-ProjectExample::ProjectExample()
+Project1::Project1()
 {
   reset();
-  ImGui::SetViewRect({ 0.f, 0.f }, { 10.f, 10.f });
+
+  //upper left to lower right
+  ImGui::SetViewRect({ -0.2f, 3.4f }, { 1.2, -3.4f });
 }
 
-void ProjectExample::draw()
+void Project1::draw()
 {
   // Basic colors that work well with the background
   const ImU32 boxColorPacked = ImGui::ColorConvertFloat4ToU32(colorSoftLightGray);
@@ -23,20 +25,11 @@ void ProjectExample::draw()
     ImGui::RenderRect({ 1.f, 1.f }, { 9.f, 9.f }, boxColorPacked, boxRounding, ImDrawCornerFlags_All, boxThickness);
   }
 
-  if (drawCircle)
-  {
-    // Draw a sphere in the center
-    const auto sphereCenter = ImVec2{ 5.f, 5.f };
-    if (ImGui::PointCircle(ImGui::GetWorldPos(ImGui::GetMousePos()), sphereCenter, circleRadius))
-      ImGui::RenderCircleFilled(sphereCenter, circleRadius, circleColorHighlightedPacked, circleDivisions);
-    else 
-      ImGui::RenderCircleFilled(sphereCenter, circleRadius, circleColorPacked, circleDivisions);
-  }
 
-  //ImGui::ControlPoints(controlPoints, circleRadius, circleColorPacked, circleColorHighlightedPacked, ImGuiControlPointFlags_FixX);
+  ImGui::ControlPoints(controlPoints, circleRadius, circleColorPacked, circleColorHighlightedPacked, ImGuiControlPointFlags_FixX);
 }
 
-void ProjectExample::draw_editors()
+void Project1::draw_editors()
 {
   static ImVec2 windowSize; // Default initializes to { 0, 0 }
 
@@ -54,22 +47,13 @@ void ProjectExample::draw_editors()
     {
       if (toggleDrawBox)
       {
-        ImGui::Checkbox("Toggle Box", &drawBox);
-        if (IMGUI_DISABLED(drawBox))
-        {
-          ImGui::SliderFloat("Box Rounding", &boxRounding, 0.f, 25.f);
-          ImGui::SliderFloat("Box Thickness", &boxThickness, 0.f, 25.f);
-        }
+        ImGui::SliderInt("Degree", &degree, 1, 50);
+
       }
 
       if (toggleDrawCircle)
       {
-        ImGui::Checkbox("Toggle Circle", &drawCircle);
-        if (IMGUI_DISABLED(drawCircle))
-        {
-          ImGui::SliderFloat("Circle Radius", &circleRadius, 1.f, 250.f);
-          ImGui::SliderInt("Circle Divisions", &circleDivisions, 8, 256);
-        }
+
       }
 
       if (showMousePosition)
@@ -86,25 +70,16 @@ void ProjectExample::draw_editors()
   }
 }
 
-void ProjectExample::draw_menus()
+void Project1::draw_menus()
 {
   // Create drop-down menu button
   if (ImGui::BeginMenu("Project Example Options"))
   {
-    if (ImGui::MenuItem("Box Toggler", nullptr, toggleDrawBox))
+    if (ImGui::MenuItem("Degree Toggler", nullptr, toggleDrawBox))
     {
       toggleDrawBox ^= 1;
     }
 
-    if (ImGui::MenuItem("Circle Toggler", nullptr, toggleDrawCircle))
-    {
-      toggleDrawCircle ^= 1;
-    }
-
-    if (ImGui::MenuItem("Show Mouse Position", nullptr, showMousePosition))
-    {
-      showMousePosition ^= 1;
-    }
 
     // Make sure to end the menu
     ImGui::EndMenu();
@@ -113,7 +88,7 @@ void ProjectExample::draw_menus()
   // Add more ImGui::BeginMenu(...) for additional menus
 }
 
-void ProjectExample::reset()
+void Project1::reset()
 {
   drawBox = true;
   toggleDrawBox = true;
@@ -123,7 +98,7 @@ void ProjectExample::reset()
   showMousePosition = true;
 }
 
-std::string ProjectExample::name()
+std::string Project1::name()
 {
   return "Project Example";
 }
