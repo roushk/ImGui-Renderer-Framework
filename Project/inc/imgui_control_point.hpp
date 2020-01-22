@@ -92,12 +92,14 @@ namespace ImGui
               }
               else
               {
-                selectedControlPoint->x = selectedControlPointState.x + dragDelta.x;
+                const auto mousePos = ImGui::GetWorldPos(ImGui::GetMousePos());
+                selectedControlPoint->x = mousePos.x;
               }
             }
             else if (control_point_flags & ImGuiControlPointFlags_FixX)
             {
-              selectedControlPoint->y = selectedControlPointState.y + dragDelta.y;
+              const auto mousePos = ImGui::GetWorldPos(ImGui::GetMousePos());
+              selectedControlPoint->y = mousePos.y;
             }
             else
             {
@@ -123,6 +125,6 @@ namespace ImGui
       selectedControlPoint = nullptr;
     }
 
-    return selectedControlPoint == nullptr;
+    return moved;
   }
 }

@@ -11,6 +11,8 @@ ProjectExample::ProjectExample()
   ImGui::SetViewRect({ 0.f, 0.f }, { 10.f, 10.f });
 }
 
+
+
 void ProjectExample::draw()
 {
   // Basic colors that work well with the background
