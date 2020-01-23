@@ -105,14 +105,9 @@ void Project1::draw_menus()
     {
       usingNLI = false;
     }
-
-
-
-    
     // Make sure to end the menu
     ImGui::EndMenu();
   }
-
   
   // Add more ImGui::BeginMenu(...) for additional menus
 }
