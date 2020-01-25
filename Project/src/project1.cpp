@@ -64,6 +64,7 @@ void Project1::draw()
   }
   for (unsigned i = 0; i < controlPoints.size(); ++i)
   {
+    
     std::stringstream pos;
     pos << std::setfill(' ') << std::setw(4) << std::setprecision(2) << float(controlPoints[i].x) << " ," << controlPoints[i].y;
     //std::string pos2 = pos.str();
