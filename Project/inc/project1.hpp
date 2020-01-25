@@ -1,7 +1,14 @@
 #pragma once
 #include "application.hpp"
 
-struct ControlPoint { float x = 1.f, y = 1.f; };
+struct ControlPoint { float x = 1.f, y = 1.f; 
+ImVec2 ToImVec2(float _x = 0, float _y = 0)
+{
+  return{ x + _x,y + _y };
+  }
+};
+
+
 
 static std::vector<std::vector<int>> pyramid;
 
@@ -55,4 +62,6 @@ private:
   const ImVec4 colorSoftLightGreen = { 0.74f, 0.98f, 0.74f, 0.415f };
   const ImVec4 colorSoftBlue = { 0.56f, 0.56f, 0.95f, 1.f };
   const ImVec4 colorSoftWhiteBlue = { 0.74f, 0.74f, 0.98f, 1.f };
+
+  const ImVec4 colorWhite = { 1,1,1,1 };
 };

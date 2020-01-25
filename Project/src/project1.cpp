@@ -5,6 +5,10 @@
 #include "imgui_disabled.hpp"
 #include "imgui_control_point.hpp"
 
+#include <sstream>
+#include <iomanip> 
+
+
 Project1::Project1()
 {
   pyramid.resize(maxDegree + 1);
@@ -21,10 +25,10 @@ Project1::Project1()
     }
   }
  
-  reset();
 
   //upper left to lower right
   ImGui::SetViewRect({ -0.2f, 3.4f }, { 1.2f, -3.4f });
+  reset();
 }
 
 void Project1::draw()
@@ -33,6 +37,8 @@ void Project1::draw()
   const ImU32 boxColorPacked = ImGui::ColorConvertFloat4ToU32(colorSoftLightGray);
   const ImU32 circleColorPacked = ImGui::ColorConvertFloat4ToU32(colorSoftBlue);
   const ImU32 circleColorHighlightedPacked = ImGui::ColorConvertFloat4ToU32(colorSoftWhiteBlue);
+  const ImU32 white = ImGui::ColorConvertFloat4ToU32(colorWhite);
+
 
   if (drawBox)
   {
@@ -51,10 +57,20 @@ void Project1::draw()
     }
   }
 
-  if (ImGui::ControlPoints(controlPoints, circleRadius, circleColorPacked, circleColorHighlightedPacked, ImGuiControlPointFlags_FixX))
+  if (ImGui::ControlPoints(controlPoints, circleRadius, circleColorPacked, circleColorHighlightedPacked, ImGuiControlPointFlags_FixX | ImGuiControlPointFlags_ClampY))
   {
     CalculatePoints();
+    
   }
+  for (unsigned i = 0; i < controlPoints.size(); ++i)
+  {
+    std::stringstream pos;
+    pos << std::setfill(' ') << std::setw(4) << std::setprecision(2) << float(controlPoints[i].x) << " ," << controlPoints[i].y;
+    //std::string pos2 = pos.str();
+    ImGui::RenderText(controlPoints[i].ToImVec2(-0.061f,-0.2f), white, pos.str().c_str());
+
+  }
+
   DrawFunction();
 
 }
