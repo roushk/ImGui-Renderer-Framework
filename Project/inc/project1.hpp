@@ -34,7 +34,7 @@ private:
   bool drawBox = true;
   bool usingNLI = true;
   int degree = 1;
-  const int maxDegree = 30;
+  const int maxDegree = 100;
 
   int quality = 100;
 

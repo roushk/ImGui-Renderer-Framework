@@ -77,7 +77,8 @@ void Project1::draw_editors()
       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_AlwaysAutoResize))
     {
       
-      ImGui::SliderInt("Degree", &degree, 1, maxDegree);
+      ImGui::InputInt("Degree", &degree, 1, 5);
+
 
       // Get window size for next drawing
       windowSize = ImGui::GetWindowSize(); // A little hacky, but it works
@@ -88,12 +89,17 @@ void Project1::draw_editors()
 
   if (oldDegree != degree)
   {
+
+    //Bounds check degree
+    degree = std::max<int>(degree, 1);
+    degree = std::min<int>(degree, maxDegree);
     ResizeControlPoints();
   }
 }
 
 void Project1::draw_menus()
 {
+  bool oldNLI = usingNLI;
   // Create drop-down menu button
   if (ImGui::BeginMenu("Project 1 Options"))
   {
@@ -105,8 +111,15 @@ void Project1::draw_menus()
     {
       usingNLI = false;
     }
+
     // Make sure to end the menu
     ImGui::EndMenu();
+
+    //Relcalc points on swap
+    if (oldNLI != usingNLI)
+    {
+      CalculatePoints();
+    }
   }
   
   // Add more ImGui::BeginMenu(...) for additional menus
@@ -217,12 +230,26 @@ void Project1::CalculatePoints()
     //NLI
     for (unsigned i = 0; i < quality; ++i)
     {
+
       //float t = current x value of this point on the graph (the current i / quality as float)
       float t = i / float(quality);
 
       //p(t) = p[a0,a1,a2,...aN](t) = (1 - t)p[a0,a1,a2,...a(N - 1)](t) + (t)p[a1,a2,...a(N)]
-      float p = NLIFunc(controlPoints, t);
-      points[i] = (ImVec2(t,p));
+      float p = 0;// = NLIFunc(controlPoints, t);
+      int depth = controlPoints.size();
+
+      std::vector<ControlPoint> controlPointCopy = std::vector(controlPoints.begin(), controlPoints.end());
+
+      for (unsigned j = 0; j < depth - 1; ++j)
+      {
+        for (unsigned k = 0; k < depth - 1; ++k)
+        {
+          
+          controlPointCopy[k].y = (1 - t) * controlPointCopy[k].y + t * controlPointCopy[k + 1].y;
+
+        }
+      }
+      points[i] = (ImVec2(t, controlPointCopy[0].y));
 
     }
   }
