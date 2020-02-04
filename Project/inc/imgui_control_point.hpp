@@ -1,21 +1,25 @@
 #pragma once
 #include "enumerate.hpp"
+#include "imgui_distance.hpp"
 
 enum ImGuiControlPointFlags_
 {
-  ImGuiControlPointFlags_None       = 0,
-  ImGuiControlPointFlags_FixX       = 1 << 1,
-  ImGuiControlPointFlags_FixY       = 1 << 2,
+	ImGuiControlPointFlags_None = 0,
+	ImGuiControlPointFlags_FixX = 1 << 1,
+	ImGuiControlPointFlags_FixY = 1 << 2,
 
-  ImGuiControlPointFlags_ClampX     = 1 << 3,
-  ImGuiControlPointFlags_ClampY     = 1 << 4,
+	ImGuiControlPointFlags_ClampX = 1 << 3,
+	ImGuiControlPointFlags_ClampY = 1 << 4,
 
-  ImGuiControlPointFlags_FixXY      = ImGuiControlPointFlags_FixX | ImGuiControlPointFlags_FixY,
-  ImGuiControlPointFlags_ClampXY    = ImGuiControlPointFlags_ClampX | ImGuiControlPointFlags_ClampY
+	ImGuiControlPointFlags_AddAndRemoveWithMouse = 1 << 5,
+
+	ImGuiControlPointFlags_FixXY = ImGuiControlPointFlags_FixX | ImGuiControlPointFlags_FixY,
+	ImGuiControlPointFlags_ClampXY = ImGuiControlPointFlags_ClampX | ImGuiControlPointFlags_ClampY
 };
 
 namespace ImGui
 {
+	// The only requirement for a ControlPoint object is the ability to modify an x and a y value
 	template <typename T>
 	bool ControlPoints(std::vector<T>& control_points, float radius, ImU32 base_col, ImU32 selected_col, int control_point_flags = ImGuiControlPointFlags_None)
 	{
@@ -25,6 +29,7 @@ namespace ImGui
 		// draw control nodes
 		bool noneSelected = true;
 		bool moved = false;
+		bool markedForDeletion = false;
 		// run through every control node
 		for (const auto& [i, controlPoint] : enumerate(control_points))
 		{
@@ -110,6 +115,12 @@ namespace ImGui
 					moved = true;
 					noneSelected = false;
 				}
+				else if (control_point_flags & ImGuiControlPointFlags_AddAndRemoveWithMouse && ImGui::IsMouseClicked(1)) // if we right click a node
+				{
+					markedForDeletion = true;
+					moved = true;
+					noneSelected = true;
+				}
 				else
 				{
 					selectedControlPointState = *selectedControlPoint;
@@ -117,10 +128,27 @@ namespace ImGui
 			}
 		}
 
+		if (markedForDeletion)
+		{
+			// somehow this should work
+			control_points.erase(control_points.begin() + (selectedControlPoint - &*control_points.begin()));
+		}
+
 		// if node is no longer selected (not dragging or hovering) then unset selected control point
 		if (noneSelected == true)
 		{
 			selectedControlPoint = nullptr;
+
+			// if we left click not on a node
+			if (control_point_flags & ImGuiControlPointFlags_AddAndRemoveWithMouse && ImGui::IsMouseClicked(0) && !ImGui::GetIO().WantCaptureMouse)
+			{
+				const auto mousePos = ImGui::GetWorldPos(ImGui::GetMousePos());
+
+				control_points.push_back(T{ mousePos.x, mousePos.y });
+				selectedControlPoint = &control_points.back();
+				selectedControlPointState = *selectedControlPoint;
+				moved = true;
+			}
 		}
 
 		return moved;

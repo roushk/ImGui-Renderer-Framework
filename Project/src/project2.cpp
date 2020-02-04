@@ -84,7 +84,7 @@ void Project2::draw()
     }
   }
 
-  if (ImGui::ControlPoints(controlPoints, circleRadius, circleColorPacked, circleColorHighlightedPacked, ImGuiControlPointFlags_ClampX | ImGuiControlPointFlags_ClampY))
+  if (ImGui::ControlPoints(controlPoints, circleRadius, circleColorPacked, circleColorHighlightedPacked, ImGuiControlPointFlags_ClampXY | ImGuiControlPointFlags_AddAndRemoveWithMouse) && controlPoints.size() > 0)
   {
     CalculatePoints();
   }
@@ -102,8 +102,8 @@ void Project2::draw()
     //ImGui::RenderText(controlPoints[i].ToImVec2(-0.01f, 0.1f), white, std::to_string(i).c_str());
     
   }
-
-  for (unsigned i = 0; i < controlPoints.size() - 1; ++i)
+  
+  for (int i = 0; i < int(controlPoints.size()) - 1; ++i)
   { 
     ImGui::RenderLine(controlPoints[i].ToImVec2(), controlPoints[i + 1].ToImVec2(), white, lineThickness);
   }
@@ -130,7 +130,7 @@ void Project2::draw_editors()
       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_AlwaysAutoResize))
     {
       
-      ImGui::InputInt("Degree", &degree, 1, 5);
+      //ImGui::InputInt("Degree", &degree, 1, 5);
 
 
       // Get window size for next drawing
