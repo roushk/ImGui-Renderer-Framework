@@ -46,6 +46,14 @@ ControlPoint operator* (float rhs) const
   return newPoint;
 }
 
+ControlPoint operator+ (ControlPoint rhs) const
+{
+  ControlPoint newPoint;
+  newPoint.x = x + rhs.x;
+  newPoint.y = y + rhs.y;
+  return newPoint;
+}
+
 ControlPoint& operator+= (const ControlPoint& rhs)
 {
   x += rhs.x;

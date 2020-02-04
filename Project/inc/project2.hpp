@@ -33,7 +33,8 @@ public:
 
   float NLIFunc(std::vector<ControlPoint>& points, float t);
   float BernsteinBasis(int i, int d, float t);
-
+  std::vector<ControlPoint> Subdivide(ControlPoint& P1, ControlPoint& P2, ControlPoint& P3, ControlPoint& P4);
+  ControlPoint LerpControlPoints(ControlPoint& P1, ControlPoint& P2, float t = 0.5f);
 
 private:
 

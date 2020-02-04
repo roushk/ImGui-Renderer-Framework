@@ -19,6 +19,45 @@ Project2::Project2()
   reset();
 }
 
+
+void Project2::reset()
+{
+  BernsteinPoly.SetQuality(maxDegree);
+  points.resize(quality);
+  ResizeControlPoints();
+
+  drawBox = true;
+  drawCircle = true;
+  toggleDrawCircle = true;
+  circleRadius = 15.f;
+}
+
+std::string Project2::name()
+{
+  return "Project 2";
+}
+
+void Project2::ResizeControlPoints()
+{
+  controlPoints.resize(degree + 1);
+
+  //set x values
+  for (unsigned i = 0; i < degree + 1; ++i)
+  {
+    controlPoints[i].x = (i / (float)degree);
+  }
+  CalculatePoints();
+}
+
+void Project2::DrawFunction()
+{
+  for (unsigned i = 1; i < quality; ++i)
+  {
+    ImGui::RenderLine(points[i - 1], points[i], ImGui::ColorConvertFloat4ToU32(colorSoftLightGreen));
+  }
+}
+
+
 void Project2::draw()
 {
   // Basic colors that work well with the background
@@ -59,9 +98,9 @@ void Project2::draw()
     //std::string pos2 = pos.str();
     ImGui::RenderText(controlPoints[i].ToImVec2(-0.061f,-0.2f), white, pos.str().c_str());
 
-    //std::string pos2 = pos.str();
-    ImGui::RenderText(controlPoints[i].ToImVec2(-0.01f, 0.1f), white, std::to_string(i).c_str());
-
+    //Display which number point this is
+    //ImGui::RenderText(controlPoints[i].ToImVec2(-0.01f, 0.1f), white, std::to_string(i).c_str());
+    
   }
 
   for (unsigned i = 0; i < controlPoints.size() - 1; ++i)
@@ -158,43 +197,6 @@ void Project2::draw_menus()
   // Add more ImGui::BeginMenu(...) for additional menus
 }
 
-void Project2::reset()
-{
-  BernsteinPoly.SetQuality(maxDegree);
-  points.resize(quality);
-  ResizeControlPoints();
-
-  drawBox = true;
-  drawCircle = true;
-  toggleDrawCircle = true;
-  circleRadius = 15.f;
-}
-
-std::string Project2::name()
-{
-  return "Project 2";
-}
-
-void Project2::ResizeControlPoints()
-{
-  controlPoints.resize(degree + 1);
-
-  //set x values
-  for (unsigned i = 0; i < degree + 1; ++i)
-  {
-    controlPoints[i].x = (i / (float)degree);
-  }
-  CalculatePoints();
-}
-
-void Project2::DrawFunction()
-{
-  for (unsigned i = 1; i < quality; ++i)
-  {
-    ImGui::RenderLine(points[i - 1], points[i], ImGui::ColorConvertFloat4ToU32(colorSoftLightGreen));
-  }
-}
-
 
 //NLI recursive func
 float Project2::NLIFunc(std::vector<ControlPoint>& points, float t)
@@ -253,11 +255,11 @@ void Project2::CalculatePoints()
         for (unsigned k = 0; k < depth - 1; ++k)
         {
           
-          controlPointCopy[k].y = (1 - t) * controlPointCopy[k].y + t * controlPointCopy[k + 1].y;
+          controlPointCopy[k] = controlPointCopy[k] * (1 - t) + controlPointCopy[k + 1] * t;
 
         }
       }
-      points[i] = (ImVec2(t, controlPointCopy[0].y));
+      points[i] = controlPointCopy[0].ToImVec2();
 
     }
   }
@@ -306,12 +308,28 @@ void Project2::CalculatePoints()
     }
 
   }
-
-
 }
 
 
 float Project2::BernsteinBasis(int i, int d, float t)
 {
   return float(BernsteinPoly.XChooseY(d, i)) * pow((1.0f - t), (d - i)) * pow((t), (i));
+}
+
+std::vector<ControlPoint> Project2::Subdivide(ControlPoint& P1, ControlPoint& P2, ControlPoint& P3, ControlPoint& P4)
+{
+  ControlPoint P1P2Midpoint = (P1 * 0.5f) + (P2 * 0.5f);
+  ControlPoint P2P3Midpoint = (P2 * 0.5f) + (P3 * 0.5f);
+  ControlPoint P3P4Midpoint = (P3 * 0.5f) + (P4 * 0.5f);
+
+  return std::vector<ControlPoint>({ P1, P1P2Midpoint, 
+    P2, P2P3Midpoint, P3, P3P4Midpoint, P4 });
+}
+
+//Returns point inbetween P1 and P2 
+ControlPoint Project2::LerpControlPoints(ControlPoint& P1, ControlPoint& P2, float t)
+{
+  //lerp (1-t) * v1 + t * v2
+  return (P1 * (1.0f - t)) + (P2 * t);
+
 }
