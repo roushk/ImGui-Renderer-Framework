@@ -1,67 +1,22 @@
 #pragma once
 #include "application.hpp"
+#include "project1.hpp"
 
 
-class BernsteinPolynomial
+enum class CurrentMode
 {
-public:
-  void SetQuality(int maxDegree)
-  {
-    if (pyramid.size() < maxDegree + 1)
-    {
-      pyramid.resize(maxDegree + 1);
-    }
+  NLI,
+  BBForm,
+  MidpointSub
 
-    for (unsigned x = 0; x < maxDegree + 1; ++x)
-    {
-
-      pyramid[x].resize(maxDegree + 1);
-
-      for (unsigned y = 0; y < maxDegree + 1; ++y)
-      {
-        pyramid[x][y] = XChooseYCache(x, y);
-
-      }
-    }
-  }
-
-  int XChooseYCache(int x, int y);
-  int XChooseY(int x, int y);
-  std::vector<std::vector<int>> pyramid;
-
-
-};
-static BernsteinPolynomial BernsteinPoly;
-
-struct ControlPoint { float x = 1.f, y = 1.f; 
-ImVec2 ToImVec2(float _x = 0, float _y = 0)
-{
-  return{ x + _x,y + _y };
-  }
-ControlPoint operator* (float rhs) const 
-{
-  ControlPoint newPoint;
-  newPoint.x = x * rhs;
-  newPoint.y = y * rhs;
-  return newPoint;
-}
-
-ControlPoint& operator+= (const ControlPoint& rhs)
-{
-  x += rhs.x;
-  y += rhs.y;
-  return *this;
-}
 };
 
 
 
-
-
-class Project1 : public Project
+class Project2 : public Project
 {
 public:
-  Project1();
+  Project2();
 
   void draw() final override;
   void draw_editors() final override;
@@ -76,18 +31,25 @@ public:
   void DrawFunction();
   void CalculatePoints();
 
+  float NLIFunc(std::vector<ControlPoint>& points, float t);
   float BernsteinBasis(int i, int d, float t);
+
 
 private:
 
+  CurrentMode currentMode = CurrentMode::NLI;
   std::vector<ImVec2> points;
 
   bool drawBox = true;
+  
   bool usingNLI = true;
-  int degree = 1;
-  const int maxDegree = 100;
+  bool usingBBform = false;
+  bool usingMidSub = false;
 
-  int quality = 100;
+  int degree = 1;
+
+  const int maxDegree = 100;
+  int quality = 200;
 
 
   float boxRounding = 0.0f;

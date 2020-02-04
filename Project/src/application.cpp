@@ -1,6 +1,8 @@
 #include "pch.hpp"
 #include "application.hpp"
 #include "project1.hpp"
+#include "project2.hpp"
+
 #include "project_example.hpp"
 
 int Application::windowHeight = 600;
@@ -213,12 +215,12 @@ void Application::init_projects()
 {
   // Load projects here
   projects.emplace_back(std::make_unique<Project1>(Project1{}));
-  // projects.emplace_back(std::make_unique<Project1>(Project1{}));
+  projects.emplace_back(std::make_unique<Project2>(Project2{}));
   // projects.emplace_back(std::make_unique<Project2>(Project2{}));
   // ... etc
 
   // set startup project
-  currentProject = projects[0].get();
+  currentProject = projects[1].get();
 }
 
 HRESULT Application::create_device()

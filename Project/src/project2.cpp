@@ -1,5 +1,8 @@
 #include <pch.hpp>
+
+#include "project2.hpp"
 #include "project1.hpp"
+
 
 #include "imgui_distance.hpp"
 #include "imgui_disabled.hpp"
@@ -9,14 +12,14 @@
 #include <iomanip> 
 
 
-Project1::Project1()
+Project2::Project2()
 {
   //upper left to lower right
   ImGui::SetViewRect({ -0.2f, 3.4f }, { 1.2f, -3.4f });
   reset();
 }
 
-void Project1::draw()
+void Project2::draw()
 {
   // Basic colors that work well with the background
   const ImU32 boxColorPacked = ImGui::ColorConvertFloat4ToU32(colorSoftLightGray);
@@ -42,11 +45,12 @@ void Project1::draw()
     }
   }
 
-  if (ImGui::ControlPoints(controlPoints, circleRadius, circleColorPacked, circleColorHighlightedPacked, ImGuiControlPointFlags_FixX | ImGuiControlPointFlags_ClampY))
+  if (ImGui::ControlPoints(controlPoints, circleRadius, circleColorPacked, circleColorHighlightedPacked, ImGuiControlPointFlags_ClampX | ImGuiControlPointFlags_ClampY))
   {
     CalculatePoints();
-    
   }
+
+
   for (unsigned i = 0; i < controlPoints.size(); ++i)
   {
     
@@ -55,13 +59,21 @@ void Project1::draw()
     //std::string pos2 = pos.str();
     ImGui::RenderText(controlPoints[i].ToImVec2(-0.061f,-0.2f), white, pos.str().c_str());
 
+    //std::string pos2 = pos.str();
+    ImGui::RenderText(controlPoints[i].ToImVec2(-0.01f, 0.1f), white, std::to_string(i).c_str());
+
+  }
+
+  for (unsigned i = 0; i < controlPoints.size() - 1; ++i)
+  { 
+    ImGui::RenderLine(controlPoints[i].ToImVec2(), controlPoints[i + 1].ToImVec2(), white, lineThickness);
   }
 
   DrawFunction();
-
+  
 }
 
-void Project1::draw_editors()
+void Project2::draw_editors()
 {
   int oldDegree = degree;
   static ImVec2 windowSize; // Default initializes to { 0, 0 }
@@ -74,7 +86,7 @@ void Project1::draw_editors()
     ImGui::SetNextWindowBgAlpha(0.2f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
-    if (ImGui::Begin("##Example_Editor", nullptr,
+    if (ImGui::Begin("##Example_Editor2", nullptr,
       ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_AlwaysAutoResize))
     {
@@ -99,20 +111,39 @@ void Project1::draw_editors()
   }
 }
 
-void Project1::draw_menus()
+void Project2::draw_menus()
 {
   bool oldNLI = usingNLI;
   // Create drop-down menu button
-  if (ImGui::BeginMenu("Project 1 Options"))
+  if (ImGui::BeginMenu("Project 2 Options"))
   {
     if (ImGui::MenuItem("NLI", nullptr, usingNLI))
     {
+      currentMode = CurrentMode::NLI;
+      
+    }
+    if (ImGui::MenuItem("BB-Form", nullptr, usingBBform))
+    {
+      currentMode = CurrentMode::BBForm;
+    }
+    if (ImGui::MenuItem("Midpoint Subdivision", nullptr, usingMidSub))
+    {
+      currentMode = CurrentMode::MidpointSub;
+    }
+    usingNLI = usingBBform = usingMidSub = false;
+    if (currentMode == CurrentMode::NLI)
+    {
       usingNLI = true;
     }
-    if (ImGui::MenuItem("BB-Form", nullptr, !usingNLI))
+    else if (currentMode == CurrentMode::BBForm)
     {
-      usingNLI = false;
+      usingBBform = true;
     }
+    else
+    {
+      usingMidSub = true;
+    }
+
 
     // Make sure to end the menu
     ImGui::EndMenu();
@@ -127,7 +158,7 @@ void Project1::draw_menus()
   // Add more ImGui::BeginMenu(...) for additional menus
 }
 
-void Project1::reset()
+void Project2::reset()
 {
   BernsteinPoly.SetQuality(maxDegree);
   points.resize(quality);
@@ -139,12 +170,12 @@ void Project1::reset()
   circleRadius = 15.f;
 }
 
-std::string Project1::name()
+std::string Project2::name()
 {
-  return "Project 1";
+  return "Project 2";
 }
 
-void Project1::ResizeControlPoints()
+void Project2::ResizeControlPoints()
 {
   controlPoints.resize(degree + 1);
 
@@ -156,7 +187,7 @@ void Project1::ResizeControlPoints()
   CalculatePoints();
 }
 
-void Project1::DrawFunction()
+void Project2::DrawFunction()
 {
   for (unsigned i = 1; i < quality; ++i)
   {
@@ -166,7 +197,7 @@ void Project1::DrawFunction()
 
 
 //NLI recursive func
-float NLIFunc(std::vector<ControlPoint>& points, float t)
+float Project2::NLIFunc(std::vector<ControlPoint>& points, float t)
 {
   //if 1 point
   if (points.size() == 1)
@@ -197,38 +228,12 @@ float NLIFunc(std::vector<ControlPoint>& points, float t)
 //(d,y < 0) = (d, d + 1) = (0,d) = 0
 
 
-int BernsteinPolynomial::XChooseYCache(int x, int y)
+
+
+void Project2::CalculatePoints()
 {
 
-  //base case
-  if (x == y || y == 0)
-    return 1;
-
-  //error case
-  if (y < 0 || y > x || x == 0)
-  {
-    return 0;
-  }
-
-  if (pyramid[x][y] != 0)
-    return pyramid[x][y];
-
-  //recursive case
-  return XChooseYCache(x - 1, y - 1) + XChooseYCache(x - 1, y);
-}
-
-
-int BernsteinPolynomial::XChooseY(int x, int y)
-{
-  return pyramid[x][y];
-}
-
-
-
-void Project1::CalculatePoints()
-{
-
-  if (usingNLI)
+  if (currentMode == CurrentMode::NLI)
   {
     //NLI
     for (unsigned i = 0; i < quality; ++i)
@@ -256,31 +261,57 @@ void Project1::CalculatePoints()
 
     }
   }
-  else
+  else if (currentMode == CurrentMode::BBForm)
   {
-    //BB-Form
+    //BB-Form BBForm
     for (unsigned i = 0; i < quality; ++i)
     {
 
       float t = i / float(quality);
 
-      float p = 0;
+      ControlPoint p{ 0,0 };
 
+      //for each point P[i] in array P[Size]
+      //gamma(t) = summation from i = 0 to d of (Bernstinen Basis(i,d,t) * P[i]
       for (unsigned j = 0; j < controlPoints.size(); ++j)
       {
-        p += controlPoints[j].y * BernsteinBasis(j, degree, t);
+        p += controlPoints[j] * BernsteinBasis(j, degree, t);
       }
 
-      points[i] = (ImVec2(t, p));
+      points[i] = p.ToImVec2();
 
     }
   }
+  //  if (currentMode == CurrentMode::MidpointSub)
+  else
+  {
+    //Midpoint Subdivision
+    //BB-Form BBForm
+    for (unsigned i = 0; i < quality; ++i)
+    {
+
+      float t = i / float(quality);
+
+      ControlPoint p{ 0,0 };
+
+      //for each point P[i] in array P[Size]
+      //gamma(t) = summation from i = 0 to d of (Bernstinen Basis(i,d,t) * P[i]
+      for (unsigned j = 0; j < controlPoints.size(); ++j)
+      {
+        p += controlPoints[j] * BernsteinBasis(j, degree, t);
+      }
+
+      points[i] = p.ToImVec2();
+
+    }
+
+  }
+
 
 }
 
-float Project1::BernsteinBasis(int i, int d, float t)
+
+float Project2::BernsteinBasis(int i, int d, float t)
 {
   return float(BernsteinPoly.XChooseY(d, i)) * pow((1.0f - t), (d - i)) * pow((t), (i));
 }
-
-
