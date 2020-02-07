@@ -33,33 +33,36 @@ public:
 };
 static BernsteinPolynomial BernsteinPoly;
 
-struct ControlPoint { float x = 1.f, y = 1.f; 
-ImVec2 ToImVec2(float _x = 0, float _y = 0)
-{
-  return{ x + _x,y + _y };
+struct ControlPoint { 
+  float x = 1.f;
+  float y = 1.f;
+
+  ImVec2 ToImVec2(float _x = 0, float _y = 0)
+  {
+    return{ x + _x,y + _y };
   }
-ControlPoint operator* (float rhs) const 
-{
-  ControlPoint newPoint;
-  newPoint.x = x * rhs;
-  newPoint.y = y * rhs;
-  return newPoint;
-}
+  ControlPoint operator* (float rhs) const 
+  {
+    ControlPoint newPoint;
+    newPoint.x = x * rhs;
+    newPoint.y = y * rhs;
+    return newPoint;
+  }
 
-ControlPoint operator+ (ControlPoint rhs) const
-{
-  ControlPoint newPoint;
-  newPoint.x = x + rhs.x;
-  newPoint.y = y + rhs.y;
-  return newPoint;
-}
+  ControlPoint operator+ (ControlPoint rhs) const
+  {
+    ControlPoint newPoint;
+    newPoint.x = x + rhs.x;
+    newPoint.y = y + rhs.y;
+    return newPoint;
+  }
 
-ControlPoint& operator+= (const ControlPoint& rhs)
-{
-  x += rhs.x;
-  y += rhs.y;
-  return *this;
-}
+  ControlPoint& operator+= (const ControlPoint& rhs)
+  {
+    x += rhs.x;
+    y += rhs.y;
+    return *this;
+  }
 };
 
 

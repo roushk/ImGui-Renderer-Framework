@@ -65,6 +65,7 @@ void Project2::draw()
   const ImU32 circleColorPacked = ImGui::ColorConvertFloat4ToU32(colorSoftBlue);
   const ImU32 circleColorHighlightedPacked = ImGui::ColorConvertFloat4ToU32(colorSoftWhiteBlue);
   const ImU32 white = ImGui::ColorConvertFloat4ToU32(colorWhite);
+  const ImU32 blue = ImGui::ColorConvertFloat4ToU32(colorSoftBlue);
 
 
   if (drawBox)
@@ -108,6 +109,17 @@ void Project2::draw()
     ImGui::RenderLine(controlPoints[i].ToImVec2(), controlPoints[i + 1].ToImVec2(), white, lineThickness);
   }
 
+  RecalculateShellNLI();
+
+
+  for (int i = 1; i < controlPointCopy2D.size(); ++i)
+  {
+    for (int j = 0; j < controlPointCopy2D[i].size() - 1; ++j)
+    {
+      ImGui::RenderLine(controlPointCopy2D[i][j].ToImVec2(), controlPointCopy2D[i][j + 1].ToImVec2(), blue, lineThickness);
+    }
+  }
+
   DrawFunction();
   
 }
@@ -125,12 +137,13 @@ void Project2::draw_editors()
     ImGui::SetNextWindowBgAlpha(0.2f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
+
     if (ImGui::Begin("##Example_Editor2", nullptr,
       ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_AlwaysAutoResize))
     {
       
-      //ImGui::InputInt("Degree", &degree, 1, 5);
+      ImGui::SliderFloat("T value for NLI", &tValueNLI,0,1);
 
 
       // Get window size for next drawing
@@ -230,7 +243,33 @@ float Project2::NLIFunc(std::vector<ControlPoint>& points, float t)
 //(d,y < 0) = (d, d + 1) = (0,d) = 0
 
 
+void Project2::RecalculateShellNLI()
+{
 
+  controlPointCopy2D.resize(controlPoints.size());
+
+
+  //initialize the first points (first row of t values)
+  controlPointCopy2D.at(0) = controlPoints;
+
+
+  for (unsigned i = 1; i < controlPointCopy2D.size(); ++i)
+  {
+    //resize to the size - i so cascading size
+    controlPointCopy2D.at(i).resize(controlPointCopy2D.size() - i);
+  }
+
+
+  for (unsigned i = 1; i < controlPointCopy2D.size(); ++i)
+  {
+    //Shell Loop
+    for (unsigned j = 0; j < controlPointCopy2D.size() - i; ++j)
+    {
+      controlPointCopy2D[i][j] = controlPointCopy2D[i - 1][j] * (1 - tValueNLI) + controlPointCopy2D[i - 1][j + 1] * tValueNLI;
+    }
+  }
+
+}
 
 void Project2::CalculatePoints()
 {
@@ -242,7 +281,7 @@ void Project2::CalculatePoints()
     {
 
       //float t = current x value of this point on the graph (the current i / quality as float)
-      float t = i / float(quality);
+      float t = i / float(quality - 1);
 
       //p(t) = p[a0,a1,a2,...aN](t) = (1 - t)p[a0,a1,a2,...a(N - 1)](t) + (t)p[a1,a2,...a(N)]
       float p = 0;// = NLIFunc(controlPoints, t);
@@ -250,17 +289,18 @@ void Project2::CalculatePoints()
 
       std::vector<ControlPoint> controlPointCopy = std::vector(controlPoints.begin(), controlPoints.end());
 
+
       for (unsigned j = 0; j < depth - 1; ++j)
       {
         for (unsigned k = 0; k < depth - 1; ++k)
         {
           
           controlPointCopy[k] = controlPointCopy[k] * (1 - t) + controlPointCopy[k + 1] * t;
+          //Sett the size 
 
         }
+        points[i] = controlPointCopy[0].ToImVec2();
       }
-      points[i] = controlPointCopy[0].ToImVec2();
-
     }
   }
   else if (currentMode == CurrentMode::BBForm)
@@ -269,7 +309,7 @@ void Project2::CalculatePoints()
     for (unsigned i = 0; i < quality; ++i)
     {
 
-      float t = i / float(quality);
+      float t = i / float(quality - 1);
 
       ControlPoint p{ 0,0 };
 
@@ -277,7 +317,7 @@ void Project2::CalculatePoints()
       //gamma(t) = summation from i = 0 to d of (Bernstinen Basis(i,d,t) * P[i]
       for (unsigned j = 0; j < controlPoints.size(); ++j)
       {
-        p += controlPoints[j] * BernsteinBasis(j, degree, t);
+        p += controlPoints[j] * BernsteinBasis(j, controlPoints.size() - 1, t);
       }
 
       points[i] = p.ToImVec2();

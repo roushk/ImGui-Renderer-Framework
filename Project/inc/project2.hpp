@@ -30,6 +30,7 @@ public:
   void ResizeControlPoints();
   void DrawFunction();
   void CalculatePoints();
+  void RecalculateShellNLI();
 
   float NLIFunc(std::vector<ControlPoint>& points, float t);
   float BernsteinBasis(int i, int d, float t);
@@ -40,6 +41,7 @@ private:
 
   CurrentMode currentMode = CurrentMode::NLI;
   std::vector<ImVec2> points;
+  std::vector<std::vector<ControlPoint>> controlPointCopy2D;
 
   bool drawBox = true;
   
@@ -49,7 +51,10 @@ private:
 
   int degree = 1;
 
-  const int maxDegree = 100;
+  float tValueNLI = 0.5f;
+
+  const int maxDegree = 80;
+
   int quality = 200;
 
 
