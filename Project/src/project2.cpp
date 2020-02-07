@@ -149,12 +149,18 @@ void Project2::draw_editors()
       
       if (usingNLI)
       {
-        ImGui::SliderFloat("T value for NLI", &tValueNLI,0,1);
+        if (ImGui::SliderFloat("T value for NLI", &tValueNLI, 0, 1))
+        {
+          CalculatePoints();
+        }
 
       }
       if (usingMidSub)
       {
-        ImGui::SliderInt("Max Subdivisions for Midpoint Subdivision", &maxSubdivisions, 1, 10);
+        if (ImGui::SliderInt("Max Subdivisions for Midpoint Subdivision", &maxSubdivisions, 1, 10))
+        {
+          CalculatePoints();
+        }
 
       }
 
@@ -178,7 +184,7 @@ void Project2::draw_editors()
 
 void Project2::draw_menus()
 {
-  bool oldNLI = usingNLI;
+  CurrentMode oldMode = currentMode;
   // Create drop-down menu button
   if (ImGui::BeginMenu("Project 2 Options"))
   {
@@ -214,7 +220,7 @@ void Project2::draw_menus()
     ImGui::EndMenu();
 
     //Relcalc points on swap
-    if (oldNLI != usingNLI)
+    if (oldMode != currentMode)
     {
       CalculatePoints();
     }
