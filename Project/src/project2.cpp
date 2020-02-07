@@ -51,7 +51,7 @@ void Project2::ResizeControlPoints()
 
 void Project2::DrawFunction()
 {
-  for (unsigned i = 1; i < quality; ++i)
+  for (unsigned i = 1; i < points.size(); ++i)
   {
     ImGui::RenderLine(points[i - 1], points[i], ImGui::ColorConvertFloat4ToU32(colorSoftLightGreen));
   }
@@ -112,11 +112,15 @@ void Project2::draw()
   RecalculateShellNLI();
 
 
-  for (int i = 1; i < controlPointCopy2D.size(); ++i)
+  if (currentMode == CurrentMode::NLI)
   {
-    for (int j = 0; j < controlPointCopy2D[i].size() - 1; ++j)
+
+    for (int i = 1; i < controlPointCopy2D.size(); ++i)
     {
-      ImGui::RenderLine(controlPointCopy2D[i][j].ToImVec2(), controlPointCopy2D[i][j + 1].ToImVec2(), blue, lineThickness);
+      for (int j = 0; j < controlPointCopy2D[i].size() - 1; ++j)
+      {
+        ImGui::RenderLine(controlPointCopy2D[i][j].ToImVec2(), controlPointCopy2D[i][j + 1].ToImVec2(), blue, lineThickness);
+      }
     }
   }
 
@@ -143,7 +147,16 @@ void Project2::draw_editors()
       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_AlwaysAutoResize))
     {
       
-      ImGui::SliderFloat("T value for NLI", &tValueNLI,0,1);
+      if (usingNLI)
+      {
+        ImGui::SliderFloat("T value for NLI", &tValueNLI,0,1);
+
+      }
+      if (usingMidSub)
+      {
+        ImGui::SliderInt("Max Subdivisions for Midpoint Subdivision", &maxSubdivisions, 1, 10);
+
+      }
 
 
       // Get window size for next drawing
@@ -271,9 +284,35 @@ void Project2::RecalculateShellNLI()
 
 }
 
+
+float Project2::BernsteinBasis(int i, int d, float t)
+{
+  return float(BernsteinPoly.XChooseY(d, i)) * pow((1.0f - t), (d - i)) * pow((t), (i));
+}
+
+std::vector<ControlPoint> Project2::Subdivide(ControlPoint& P1, ControlPoint& P2, ControlPoint& P3, ControlPoint& P4)
+{
+  ControlPoint P1P2Midpoint = (P1 * 0.5f) + (P2 * 0.5f);
+  ControlPoint P2P3Midpoint = (P2 * 0.5f) + (P3 * 0.5f);
+  ControlPoint P3P4Midpoint = (P3 * 0.5f) + (P4 * 0.5f);
+
+  return std::vector<ControlPoint>({ P1, P1P2Midpoint,
+    P2, P2P3Midpoint, P3, P3P4Midpoint, P4 });
+}
+
+//Returns point inbetween P1 and P2 
+ControlPoint Project2::LerpControlPoints(ControlPoint& P1, ControlPoint& P2, float t)
+{
+  //lerp (1-t) * v1 + t * v2
+  return (P1 * (1.0f - t)) + (P2 * t);
+
+}
+
+
 void Project2::CalculatePoints()
 {
 
+  points.clear();
   if (currentMode == CurrentMode::NLI)
   {
     //NLI
@@ -289,7 +328,6 @@ void Project2::CalculatePoints()
 
       std::vector<ControlPoint> controlPointCopy = std::vector(controlPoints.begin(), controlPoints.end());
 
-
       for (unsigned j = 0; j < depth - 1; ++j)
       {
         for (unsigned k = 0; k < depth - 1; ++k)
@@ -299,8 +337,9 @@ void Project2::CalculatePoints()
           //Sett the size 
 
         }
-        points[i] = controlPointCopy[0].ToImVec2();
       }
+
+      points.push_back(controlPointCopy[0].ToImVec2());
     }
   }
   else if (currentMode == CurrentMode::BBForm)
@@ -320,7 +359,7 @@ void Project2::CalculatePoints()
         p += controlPoints[j] * BernsteinBasis(j, controlPoints.size() - 1, t);
       }
 
-      points[i] = p.ToImVec2();
+      points.push_back(p.ToImVec2());
 
     }
   }
@@ -328,48 +367,89 @@ void Project2::CalculatePoints()
   else
   {
     //Midpoint Subdivision
-    //BB-Form BBForm
-    for (unsigned i = 0; i < quality; ++i)
+    if (controlPoints.size() == 0)
+      return;
+
+    std::vector<std::vector<ControlPoint>> subdivisidedPoints{ { controlPoints } };
+
+    for (unsigned i = 0; i < maxSubdivisions; ++i)
     {
 
-      float t = i / float(quality);
+      std::vector<std::vector<ControlPoint>> tempSubdividedPoints;
 
-      ControlPoint p{ 0,0 };
 
-      //for each point P[i] in array P[Size]
-      //gamma(t) = summation from i = 0 to d of (Bernstinen Basis(i,d,t) * P[i]
-      for (unsigned j = 0; j < controlPoints.size(); ++j)
+      for (unsigned j = 0; j < subdivisidedPoints.size(); ++j)
       {
-        p += controlPoints[j] * BernsteinBasis(j, degree, t);
+        Project2::SetsOfPoints newPoints = SubdividePoints(subdivisidedPoints[j]);
+
+        //subdivide points
+          
+        tempSubdividedPoints.push_back(newPoints.lhs);
+        tempSubdividedPoints.push_back(newPoints.rhs);
       }
 
-      points[i] = p.ToImVec2();
-
+      subdivisidedPoints.swap(tempSubdividedPoints);
     }
+
+    //for each point P[i] in array P[Size]
+    //gamma(t) = summation from i = 0 to d of (Bernstinen Basis(i,d,t) * P[i]
+    for (unsigned i = 0; i < subdivisidedPoints.size(); ++i)
+    {
+        
+      for (unsigned j = 0; j < subdivisidedPoints[i].size(); ++j)
+      {
+
+        points.push_back(subdivisidedPoints[i][j].ToImVec2());
+      }
+    }
+    //push back last point
+    points.push_back(subdivisidedPoints.back().back().ToImVec2());
+
 
   }
 }
 
 
-float Project2::BernsteinBasis(int i, int d, float t)
+Project2::SetsOfPoints Project2::SubdividePoints(const std::vector<ControlPoint>& points)
+
 {
-  return float(BernsteinPoly.XChooseY(d, i)) * pow((1.0f - t), (d - i)) * pow((t), (i));
-}
+  //set of both points in two new vectors
+  SetsOfPoints newPoints; 
 
-std::vector<ControlPoint> Project2::Subdivide(ControlPoint& P1, ControlPoint& P2, ControlPoint& P3, ControlPoint& P4)
-{
-  ControlPoint P1P2Midpoint = (P1 * 0.5f) + (P2 * 0.5f);
-  ControlPoint P2P3Midpoint = (P2 * 0.5f) + (P3 * 0.5f);
-  ControlPoint P3P4Midpoint = (P3 * 0.5f) + (P4 * 0.5f);
+  //construct the shell for the points
+  std::vector<std::vector<ControlPoint>> pointShell(points.size());
 
-  return std::vector<ControlPoint>({ P1, P1P2Midpoint, 
-    P2, P2P3Midpoint, P3, P3P4Midpoint, P4 });
-}
+  //initialize the first row to the points
 
-//Returns point inbetween P1 and P2 
-ControlPoint Project2::LerpControlPoints(ControlPoint& P1, ControlPoint& P2, float t)
-{
-  //lerp (1-t) * v1 + t * v2
-  return (P1 * (1.0f - t)) + (P2 * t);
+  for (unsigned i = 1; i < pointShell.size(); ++i)
+  {
+    //same initialization as NLI, decreasing size shell
+    pointShell.at(i).resize(pointShell.size() - i);
 
+  }
+  pointShell.at(0) = points;
+
+  for (unsigned i = 1; i < pointShell.size(); ++i)
+  {
+    //Shell Loop
+    for (unsigned j = 0; j < pointShell.size() - i; ++j)
+    {
+      //User 0.5 as t value
+      pointShell[i][j] = pointShell[i - 1][j] * (0.5f) + pointShell[i - 1][j + 1] * 0.5f;
+    }
+  }
+
+  //push back lhs
+  for (unsigned i = 0; i < pointShell.size(); ++i)
+  {
+    newPoints.lhs.push_back(pointShell[i][0]);
+  }
+
+  //push back rhs
+  for (int i = pointShell.size() - 1; i >= 0; --i)
+  {
+    newPoints.rhs.push_back(pointShell[i][pointShell[i].size() - 1]);
+  }
+
+  return newPoints;
 }

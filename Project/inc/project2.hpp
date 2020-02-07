@@ -36,6 +36,15 @@ public:
   float BernsteinBasis(int i, int d, float t);
   std::vector<ControlPoint> Subdivide(ControlPoint& P1, ControlPoint& P2, ControlPoint& P3, ControlPoint& P4);
   ControlPoint LerpControlPoints(ControlPoint& P1, ControlPoint& P2, float t = 0.5f);
+  
+  struct SetsOfPoints
+  {
+    std::vector<ControlPoint> lhs;
+    std::vector<ControlPoint> rhs;
+  };
+
+  SetsOfPoints SubdividePoints(const std::vector<ControlPoint>& points);
+
 
 private:
 
@@ -52,6 +61,8 @@ private:
   int degree = 1;
 
   float tValueNLI = 0.5f;
+
+  int maxSubdivisions = 6;
 
   const int maxDegree = 80;
 
