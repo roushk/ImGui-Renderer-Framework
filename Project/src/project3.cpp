@@ -26,7 +26,7 @@ void Project3::reset()
   points.resize(quality);
   ResizeControlPoints();
 
-  drawBox = true;
+  drawBox = false;
   drawCircle = true;
   toggleDrawCircle = true;
   circleRadius = 15.f;
@@ -91,17 +91,21 @@ void Project3::draw()
   }
 
 
-  for (unsigned i = 0; i < controlPoints.size(); ++i)
+  if(drawPointLocations)
   {
     
-    std::stringstream pos;
-    pos << std::setfill(' ') << std::setw(4) << std::setprecision(2) << float(controlPoints[i].x) << " ," << controlPoints[i].y;
-    //std::string pos2 = pos.str();
-    ImGui::RenderText(controlPoints[i].ToImVec2(-0.061f,-0.2f), white, pos.str().c_str());
+    for (unsigned i = 0; i < controlPoints.size(); ++i)
+    {
+      
+      std::stringstream pos;
+      pos << std::setfill(' ') << std::setw(4) << std::setprecision(2) << float(controlPoints[i].x) << " ," << controlPoints[i].y;
+      //std::string pos2 = pos.str();
+      ImGui::RenderText(controlPoints[i].ToImVec2(-0.061f,-0.2f), white, pos.str().c_str());
 
-    //Display which number point this is
-    //ImGui::RenderText(controlPoints[i].ToImVec2(-0.01f, 0.1f), white, std::to_string(i).c_str());
-    
+      //Display which number point this is
+      //ImGui::RenderText(controlPoints[i].ToImVec2(-0.01f, 0.1f), white, std::to_string(i).c_str());
+      
+    }
   }
   
   for (int i = 0; i < int(controlPoints.size()) - 1; ++i)
@@ -109,20 +113,6 @@ void Project3::draw()
     ImGui::RenderLine(controlPoints[i].ToImVec2(), controlPoints[i + 1].ToImVec2(), white, lineThickness);
   }
 
-  RecalculateShellNLI();
-
-
-  if (currentMode == CurrentMode::NLI)
-  {
-
-    for (int i = 1; i < controlPointCopy2D.size(); ++i)
-    {
-      for (int j = 0; j < controlPointCopy2D[i].size() - 1; ++j)
-      {
-        ImGui::RenderLine(controlPointCopy2D[i][j].ToImVec2(), controlPointCopy2D[i][j + 1].ToImVec2(), blue, lineThickness);
-      }
-    }
-  }
 
   DrawFunction();
   
@@ -147,23 +137,7 @@ void Project3::draw_editors()
       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_AlwaysAutoResize))
     {
       
-      if (usingNLI)
-      {
-        if (ImGui::SliderFloat("T value for NLI", &tValueNLI, 0, 1))
-        {
-          CalculatePoints();
-        }
-
-      }
-      if (usingMidSub)
-      {
-        if (ImGui::SliderInt("Max Subdivisions for Midpoint Subdivision", &maxSubdivisions, 1, 10))
-        {
-          CalculatePoints();
-        }
-
-      }
-
+      ImGui::Text("Degree = %d", controlPoints.size());
 
       // Get window size for next drawing
       windowSize = ImGui::GetWindowSize(); // A little hacky, but it works
@@ -188,107 +162,18 @@ void Project3::draw_menus()
   // Create drop-down menu button
   if (ImGui::BeginMenu("Project 3 Options"))
   {
-    if (ImGui::MenuItem("NLI", nullptr, usingNLI))
+    if (ImGui::MenuItem("Newton Form", nullptr, usingNLI))
     {
-      currentMode = CurrentMode::NLI;
       
     }
-    if (ImGui::MenuItem("BB-Form", nullptr, usingBBform))
-    {
-      currentMode = CurrentMode::BBForm;
-    }
-    if (ImGui::MenuItem("Midpoint Subdivision", nullptr, usingMidSub))
-    {
-      currentMode = CurrentMode::MidpointSub;
-    }
-    usingNLI = usingBBform = usingMidSub = false;
-    if (currentMode == CurrentMode::NLI)
-    {
-      usingNLI = true;
-    }
-    else if (currentMode == CurrentMode::BBForm)
-    {
-      usingBBform = true;
-    }
-    else
-    {
-      usingMidSub = true;
-    }
-
-
     // Make sure to end the menu
     ImGui::EndMenu();
-
-    //Relcalc points on swap
-    if (oldMode != currentMode)
-    {
-      CalculatePoints();
-    }
   }
   
   // Add more ImGui::BeginMenu(...) for additional menus
 }
 
 
-//NLI recursive func
-float Project3::NLIFunc(std::vector<ControlPoint>& points, float t)
-{
-  //if 1 point
-  if (points.size() == 1)
-  {
-    return points[0].y;
-  }
-
-
-  //if 2+ points
-  if (points.size() >= 2)
-  {
-    std::vector<ControlPoint> lhs;
-    std::vector<ControlPoint> rhs;
-
-
-    lhs = std::vector(points.begin(), points.end() - 1);
-    rhs = std::vector(points.begin() + 1, points.end());
-
-    return (1 - t) * NLIFunc(lhs, t) + t * NLIFunc(rhs, t);
-  }
-  
-  return 0;
-
-}
-
-//(d,i) = (d-1,i-1) + (d-1, i)
-//(d,0) = (d,d) = 1
-//(d,y < 0) = (d, d + 1) = (0,d) = 0
-
-
-void Project3::RecalculateShellNLI()
-{
-
-  controlPointCopy2D.resize(controlPoints.size());
-
-
-  //initialize the first points (first row of t values)
-  controlPointCopy2D.at(0) = controlPoints;
-
-
-  for (unsigned i = 1; i < controlPointCopy2D.size(); ++i)
-  {
-    //resize to the size - i so cascading size
-    controlPointCopy2D.at(i).resize(controlPointCopy2D.size() - i);
-  }
-
-
-  for (unsigned i = 1; i < controlPointCopy2D.size(); ++i)
-  {
-    //Shell Loop
-    for (unsigned j = 0; j < controlPointCopy2D.size() - i; ++j)
-    {
-      controlPointCopy2D[i][j] = controlPointCopy2D[i - 1][j] * (1 - tValueNLI) + controlPointCopy2D[i - 1][j + 1] * tValueNLI;
-    }
-  }
-
-}
 
 
 float Project3::BernsteinBasis(int i, int d, float t)
@@ -296,15 +181,6 @@ float Project3::BernsteinBasis(int i, int d, float t)
   return float(BernsteinPoly.XChooseY(d, i)) * pow((1.0f - t), (d - i)) * pow((t), (i));
 }
 
-std::vector<ControlPoint> Project3::Subdivide(ControlPoint& P1, ControlPoint& P2, ControlPoint& P3, ControlPoint& P4)
-{
-  ControlPoint P1P2Midpoint = (P1 * 0.5f) + (P2 * 0.5f);
-  ControlPoint P2P3Midpoint = (P2 * 0.5f) + (P3 * 0.5f);
-  ControlPoint P3P4Midpoint = (P3 * 0.5f) + (P4 * 0.5f);
-
-  return std::vector<ControlPoint>({ P1, P1P2Midpoint,
-    P2, P2P3Midpoint, P3, P3P4Midpoint, P4 });
-}
 
 //Returns point inbetween P1 and P2 
 ControlPoint Project3::LerpControlPoints(ControlPoint& P1, ControlPoint& P2, float t)
@@ -317,145 +193,105 @@ ControlPoint Project3::LerpControlPoints(ControlPoint& P1, ControlPoint& P2, flo
 
 void Project3::CalculatePoints()
 {
-
-  points.clear();
-  if (currentMode == CurrentMode::NLI)
-  {
-    //NLI
-    for (unsigned i = 0; i < quality; ++i)
-    {
-
-      //float t = current x value of this point on the graph (the current i / quality as float)
-      float t = i / float(quality - 1);
-
-      //p(t) = p[a0,a1,a2,...aN](t) = (1 - t)p[a0,a1,a2,...a(N - 1)](t) + (t)p[a1,a2,...a(N)]
-      float p = 0;// = NLIFunc(controlPoints, t);
-      int depth = controlPoints.size();
-
-      std::vector<ControlPoint> controlPointCopy = std::vector(controlPoints.begin(), controlPoints.end());
-
-      for (unsigned j = 0; j < depth - 1; ++j)
-      {
-        for (unsigned k = 0; k < depth - 1; ++k)
-        {
-          
-          controlPointCopy[k] = controlPointCopy[k] * (1 - t) + controlPointCopy[k + 1] * t;
-          //Sett the size 
-
-        }
-      }
-
-      points.push_back(controlPointCopy[0].ToImVec2());
-    }
-  }
-  else if (currentMode == CurrentMode::BBForm)
-  {
-    //BB-Form BBForm
-    for (unsigned i = 0; i < quality; ++i)
-    {
-
-      float t = i / float(quality - 1);
-
-      ControlPoint p{ 0,0 };
-
-      //for each point P[i] in array P[Size]
-      //gamma(t) = summation from i = 0 to d of (Bernstinen Basis(i,d,t) * P[i]
-      for (unsigned j = 0; j < controlPoints.size(); ++j)
-      {
-        p += controlPoints[j] * BernsteinBasis(j, controlPoints.size() - 1, t);
-      }
-
-      points.push_back(p.ToImVec2());
-
-    }
-  }
-  //  if (currentMode == CurrentMode::MidpointSub)
-  else
-  {
-    //Midpoint Subdivision
-    if (controlPoints.size() == 0)
-      return;
-
-    std::vector<std::vector<ControlPoint>> subdivisidedPoints{ { controlPoints } };
-
-    for (unsigned i = 0; i < maxSubdivisions; ++i)
-    {
-
-      std::vector<std::vector<ControlPoint>> tempSubdividedPoints;
-
-
-      for (unsigned j = 0; j < subdivisidedPoints.size(); ++j)
-      {
-        Project3::SetsOfPoints newPoints = SubdividePoints(subdivisidedPoints[j]);
-
-        //subdivide points
-          
-        tempSubdividedPoints.push_back(newPoints.lhs);
-        tempSubdividedPoints.push_back(newPoints.rhs);
-      }
-
-      subdivisidedPoints.swap(tempSubdividedPoints);
-    }
-
-    //for each point P[i] in array P[Size]
-    //gamma(t) = summation from i = 0 to d of (Bernstinen Basis(i,d,t) * P[i]
-    for (unsigned i = 0; i < subdivisidedPoints.size(); ++i)
-    {
-        
-      for (unsigned j = 0; j < subdivisidedPoints[i].size(); ++j)
-      {
-
-        points.push_back(subdivisidedPoints[i][j].ToImVec2());
-      }
-    }
-    //push back last point
-    points.push_back(subdivisidedPoints.back().back().ToImVec2());
-
-
-  }
+  DividedDifferenceTable(controlPoints);
 }
 
 
-Project3::SetsOfPoints Project3::SubdividePoints(const std::vector<ControlPoint>& points)
 
+void Project3::DividedDifferenceTable(const std::vector<ControlPoint>& points)
 {
+  Project3::points.clear();
   //set of both points in two new vectors
-  SetsOfPoints newPoints; 
+  SetsOfPoints newPoints;
 
   //construct the shell for the points
-  std::vector<std::vector<ControlPoint>> pointShell(points.size());
+  std::vector<std::vector<ControlPointDouble>> DivDiffTable(points.size());
 
   //initialize the first row to the points
-
-  for (unsigned i = 1; i < pointShell.size(); ++i)
+  for (unsigned i = 0; i < DivDiffTable.size(); ++i)
   {
     //same initialization as NLI, decreasing size shell
-    pointShell.at(i).resize(pointShell.size() - i);
+    DivDiffTable.at(i).resize(DivDiffTable.size() - i);
 
   }
-  pointShell.at(0) = points;
 
-  for (unsigned i = 1; i < pointShell.size(); ++i)
+  //[0]g = g(0)
+  //the [0] values
+  for(unsigned i = 0; i < DivDiffTable.size(); ++i)
+  {
+    DivDiffTable[0][i].x = points[i].x;
+    DivDiffTable[0][i].y = points[i].y;
+  }
+
+  //pointShell of 0 is the [0]g values
+  //pointShell of 1 is the [0,1]g values and so in until its just 1 value
+  //the nth vector has the values we want at 0 and end - 1 and the final vector has just 1 value
+
+  /*
+    Input points P0 -> Pd
+    t = 0...d
+
+    x(t) and y(t) newton forms
+    [a,b]g = ([b]g - [a]g) / (b-a)
+    [a]g = g(a) - Base Case
+    g(i) = ai
+    y(t) g(i) = bi
+    i = 0...d
+
+    [ti,ti+1,...ti+k]g = ([ti+1,...,ti+k]g - [ti+1,...,ti+k - 1]g) / ti+k - ti
+   */
+
+  //calculate the [0,1] to [0,1...d] values
+
+  for (unsigned i = 1; i < DivDiffTable.size(); ++i)
   {
     //Shell Loop
-    for (unsigned j = 0; j < pointShell.size() - i; ++j)
+    for (unsigned j = 0; j < DivDiffTable.size() - i; ++j)
     {
       //User 0.5 as t value
-      pointShell[i][j] = pointShell[i - 1][j] * (0.5f) + pointShell[i - 1][j + 1] * 0.5f;
+
+
+      //[a,b]g = ([b]g - [a]g) / (b-a)
+      //where [a,b]g = DivDiffTable[i][j]
+      //where [a]g = DivDiffTable[i - 1][j]
+      //where [b]g = DivDiffTable[i - 1][j + 1]
+
+      //X value and Y value at once
+      DivDiffTable[i][j] = (DivDiffTable[i - 1][j + 1] - DivDiffTable[i - 1][j]) * (1.0/i);
+
     }
   }
 
-  //push back lhs
-  for (unsigned i = 0; i < pointShell.size(); ++i)
+
+
+  //construct the Newton Form for all T values 0 -> d
+  for(unsigned i = 0; i < quality; ++i)
   {
-    newPoints.lhs.push_back(pointShell[i][0]);
+    //Need the double precision for more than 16 points
+
+    //set the t value to the delta t between each point and the quality
+    double t = i * double((controlPoints.size() - 1) / double(quality - 1));
+
+    double currentX = 0;
+    double currentY = 0;
+
+    for(unsigned j = 0; j < controlPoints.size(); ++j)
+    {
+      double delta = 1.0;
+      for(unsigned k = 0; k < j; ++k)
+      {
+        //set the point to its location inside of the range from the start of this point to the end of it
+        delta *= t - k;
+
+      }
+
+      //set the current X and Y of this arc between two points
+      currentX += delta * double(DivDiffTable[j][0].x);
+      currentY += delta * double(DivDiffTable[j][0].y);
+    }
+    //explicately use the imvec2 points
+    Project3::points.push_back(ImVec2{ float(currentX),  float(currentY) });
+   
   }
 
-  //push back rhs
-  for (int i = pointShell.size() - 1; i >= 0; --i)
-  {
-    newPoints.rhs.push_back(pointShell[i][pointShell[i].size() - 1]);
-  }
-
-  return newPoints;
 }

@@ -37,6 +37,14 @@ struct ControlPoint {
   float x = 1.f;
   float y = 1.f;
 
+  ControlPoint() = default;
+
+  ControlPoint(double x_, double y_)
+  {
+    x = x_;
+    y = y_;
+  }
+
   ImVec2 ToImVec2(float _x = 0, float _y = 0)
   {
     return{ x + _x,y + _y };
@@ -54,6 +62,14 @@ struct ControlPoint {
     ControlPoint newPoint;
     newPoint.x = x + rhs.x;
     newPoint.y = y + rhs.y;
+    return newPoint;
+  }
+
+  ControlPoint operator- (ControlPoint rhs) const
+  {
+    ControlPoint newPoint;
+    newPoint.x = x - rhs.x;
+    newPoint.y = y - rhs.y;
     return newPoint;
   }
 
