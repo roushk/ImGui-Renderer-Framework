@@ -69,6 +69,9 @@
     <ClCompile Include="src\project2.cpp">
       <Filter>Projects</Filter>
     </ClCompile>
+    <ClCompile Include="src\project3.cpp">
+      <Filter>Projects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\imgui\imgui.h">
@@ -165,6 +168,9 @@
       <Filter>Projects</Filter>
     </ClInclude>
     <ClInclude Include="inc\project2.hpp">
+      <Filter>Projects</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\project3.hpp">
       <Filter>Projects</Filter>
     </ClInclude>
   </ItemGroup>
