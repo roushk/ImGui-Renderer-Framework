@@ -202,6 +202,7 @@
     <ClCompile Include="src\project1.cpp" />
     <ClCompile Include="src\project2.cpp" />
     <ClCompile Include="src\project3.cpp" />
+    <ClCompile Include="src\project4.cpp" />
     <ClCompile Include="src\project_example.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -237,6 +238,7 @@
     <ClInclude Include="inc\project1.hpp" />
     <ClInclude Include="inc\project2.hpp" />
     <ClInclude Include="inc\project3.hpp" />
+    <ClInclude Include="inc\project4.hpp" />
     <ClInclude Include="inc\project_example.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

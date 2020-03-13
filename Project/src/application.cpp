@@ -3,6 +3,8 @@
 #include "project1.hpp"
 #include "project2.hpp"
 #include "project3.hpp"
+#include "project4.hpp"
+
 
 #include "project_example.hpp"
 
@@ -218,11 +220,13 @@ void Application::init_projects()
   projects.emplace_back(std::make_unique<Project1>(Project1{}));
   projects.emplace_back(std::make_unique<Project2>(Project2{}));
   projects.emplace_back(std::make_unique<Project3>(Project3{}));
+  projects.emplace_back(std::make_unique<Project4>(Project4{}));
+
   // projects.emplace_back(std::make_unique<Project2>(Project2{}));
   // ... etc
 
   // set startup project
-  currentProject = projects[2].get();
+  currentProject = projects[3].get();
 }
 
 HRESULT Application::create_device()
