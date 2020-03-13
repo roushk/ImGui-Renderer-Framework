@@ -3,9 +3,8 @@
 #include "project1.hpp"
 #include "project2.hpp"
 #include "project3.hpp"
-
-
-
+#include "Mat"
+#include "Mat.hpp"
 
 
 class Project4 : public Project
@@ -39,8 +38,8 @@ public:
 
 
 private:
+  Mat<double> matrix{ 5,5 };
 
-  CurrentMode currentMode = CurrentMode::NLI;
   std::vector<ImVec2> points;
   std::vector<std::vector<ControlPoint>> controlPointCopy2D;
 

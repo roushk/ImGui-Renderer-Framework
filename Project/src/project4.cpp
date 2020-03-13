@@ -69,11 +69,11 @@ void Project4::draw()
 
   if (drawBox)
   {
-    ImGui::RenderRect({ 0.0f, 3.0f }, { 1.0f, -3.0f }, boxColorPacked, boxRounding, ImDrawCornerFlags_All, boxThickness);
+    ImGui::RenderRect({ 0.0f,  3.0f }, { 1.0f, -3.0f }, boxColorPacked, boxRounding, ImDrawCornerFlags_All, boxThickness);
     
-    ImGui::RenderLine({ 0.0f, 2.0f }, { 1.0f, 2.0f }, boxColorPacked, lineThickness);
-    ImGui::RenderLine({ 0.0f, 1.0f }, { 1.0f, 1.0f }, boxColorPacked, lineThickness);
-    ImGui::RenderLine({ 0.0f, 0.0f }, { 1.0f, 0.0f }, boxColorPacked, lineThickness * 3.0f);
+    ImGui::RenderLine({ 0.0f,  2.0f }, { 1.0f,  2.0f }, boxColorPacked, lineThickness);
+    ImGui::RenderLine({ 0.0f,  1.0f }, { 1.0f,  1.0f }, boxColorPacked, lineThickness);
+    ImGui::RenderLine({ 0.0f,  0.0f }, { 1.0f,  0.0f }, boxColorPacked, lineThickness * 3.0f);
     ImGui::RenderLine({ 0.0f, -1.0f }, { 1.0f, -1.0f }, boxColorPacked, lineThickness);
     ImGui::RenderLine({ 0.0f, -2.0f }, { 1.0f, -2.0f }, boxColorPacked, lineThickness);
 
@@ -157,7 +157,6 @@ void Project4::draw_editors()
 
 void Project4::draw_menus()
 {
-  CurrentMode oldMode = currentMode;
   // Create drop-down menu button
   if (ImGui::BeginMenu("Project 4 Options"))
   {

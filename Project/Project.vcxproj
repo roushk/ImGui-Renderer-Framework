@@ -233,6 +233,7 @@
     <ClInclude Include="inc\imgui_render_lib.hpp" />
     <ClInclude Include="inc\inverse_lerp.hpp" />
     <ClInclude Include="inc\map_range.hpp" />
+    <ClInclude Include="inc\Mat.hpp" />
     <ClInclude Include="inc\pch.hpp" />
     <ClInclude Include="inc\project.hpp" />
     <ClInclude Include="inc\project1.hpp" />
