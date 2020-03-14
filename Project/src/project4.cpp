@@ -45,7 +45,7 @@ void Project4::ResizeControlPoints()
   {
     controlPoints[i].x = (i / (float)degree);
   }
-  CalculatePoints();
+  //CalculatePoints();
 }
 
 void Project4::DrawFunction()
@@ -191,105 +191,145 @@ ControlPoint Project4::LerpControlPoints(ControlPoint& P1, ControlPoint& P2, flo
 
 void Project4::CalculatePoints()
 {
-  DividedDifferenceTable(controlPoints);
-}
+  //N = control points size
+  //K = N - 1
+  //D = N + 2
+  points.clear();
+
+  int N = controlPoints.size();
+  int K = N - 1;
+  int D = N + 2;
+
+  Mat<double> matrixX( D, D + 1, 0);
 
 
+  // create (N + 2) x (N + 3) matrix
 
-void Project4::DividedDifferenceTable(const std::vector<ControlPoint>& points)
-{
-  Project4::points.clear();
-  //set of both points in two new vectors
-  SetsOfPoints newPoints;
-
-  //construct the shell for the points
-  std::vector<std::vector<ControlPointDouble>> DivDiffTable(points.size());
-
-  //initialize the first row to the points
-  for (unsigned i = 0; i < DivDiffTable.size(); ++i)
-  {
-    //same initialization as NLI, decreasing size shell
-    DivDiffTable.at(i).resize(DivDiffTable.size() - i);
-
-  }
-
-  //[0]g = g(0)
-  //the [0] values
-  for(unsigned i = 0; i < DivDiffTable.size(); ++i)
-  {
-    DivDiffTable[0][i].x = points[i].x;
-    DivDiffTable[0][i].y = points[i].y;
-  }
-
-  //pointShell of 0 is the [0]g values
-  //pointShell of 1 is the [0,1]g values and so in until its just 1 value
-  //the nth vector has the values we want at 0 and end - 1 and the final vector has just 1 value
+  //first 4 terms
 
   /*
-    Input points P0 -> Pd
-    t = 0...d
-
-    x(t) and y(t) newton forms
-    [a,b]g = ([b]g - [a]g) / (b-a)
-    [a]g = g(a) - Base Case
-    g(i) = ai
-    y(t) g(i) = bi
-    i = 0...d
-
-    [ti,ti+1,...ti+k]g = ([ti+1,...,ti+k]g - [ti+1,...,ti+k - 1]g) / ti+k - ti
+   * form of:
+   * 1, t, t^2, t^3, (t - 1)^3+, (t - 2)^3+, ... , (t - (k - 1))^3+
+   * .
+   * . for all t of integer values [0, k]
+   * .
+   * 0, 0, 2, 0, 0, ... , 0
+   * 0, 0, 2, 6k, 6(t - 1)+, 6(t - 2)+, ... , 6(t - (k - 1))+
    */
 
-  //calculate the [0,1] to [0,1...d] values
-
-  for (unsigned i = 1; i < DivDiffTable.size(); ++i)
+  matrixX(0, 0) = 1;
+  for(int i = 0; i < N; ++i)
   {
-    //Shell Loop
-    for (unsigned j = 0; j < DivDiffTable.size() - i; ++j)
+    matrixX(i, 0) = 1;
+    matrixX(i, 1) = i;
+    matrixX(i, 2) = i * i;
+    matrixX(i, 3) = i * i * i;
+
+    for(int j = 4; j < D; ++j)
     {
-      //User 0.5 as t value
-
-
-      //[a,b]g = ([b]g - [a]g) / (b-a)
-      //where [a,b]g = DivDiffTable[i][j]
-      //where [a]g = DivDiffTable[i - 1][j]
-      //where [b]g = DivDiffTable[i - 1][j + 1]
-
-      //X value and Y value at once
-      DivDiffTable[i][j] = (DivDiffTable[i - 1][j + 1] - DivDiffTable[i - 1][j]) * (1.0/i);
-
+      //truncated power function
+      if (i < j - 3)
+        matrixX(i, j) = 0;
+      else
+        matrixX(i, j) = pow((i - (j - 3)), 3);
     }
   }
 
+  //last 2 rows
+  matrixX(D - 2, 2) = 2;
+  matrixX(D - 1, 2) = 2;
+  matrixX(D - 1, 3) = 6 * K;
 
-
-  //construct the Newton Form for all T values 0 -> d
-  for(unsigned i = 0; i < quality; ++i)
+  for(int i = 4; i < D; ++i)
   {
-    //Need the double precision for more than 16 points
+    //truncated power function where c = i - 3
+    if (K < i - 3)
+      matrixX(D - 1, i) = 0;
+    else
+      matrixX(D - 1, i) = 6.0f * (K - (i - 3.0f));
+  }
 
-    //set the t value to the delta t between each point and the quality
-    double t = i * double((controlPoints.size() - 1) / double(quality - 1));
+  //init matrix to the same because they are the same functions minute the control points
+  Mat<double> matrixY{ matrixX };
 
-    double currentX = 0;
-    double currentY = 0;
+  for (int i = 0; i < N; ++i)
+  {
+    matrixX(i, D) = controlPoints[i].x;
+    matrixY(i, D) = controlPoints[i].y;
+  }
 
-    for(unsigned j = 0; j < controlPoints.size(); ++j)
+  /*
+  ImGui::SetNextWindowSize({ 0.f, 0.f });
+  if(ImGui::Begin("Matrix X"))
+  {
+    for(int i = 0; i < D; ++i)
     {
-      double delta = 1.0;
-      for(unsigned k = 0; k < j; ++k)
+      for (int j = 0; j < D + 1; ++j)
       {
-        //set the point to its location inside of the range from the start of this point to the end of it
-        delta *= t - k;
+        ImGui::Text(fmt::format("{}", matrixX(i, j)).c_str());
+        if (j != D)
+          ImGui::SameLine();
+      }
+    }
+    ImGui::End();
+  }
+  */
+
+
+  // Set last column of matrix to control point x and y values (can make 2 matrices pretty trivially)
+  matrixX.inplace_rref();
+  matrixY.inplace_rref();
+
+  // rref to find coefficients a0, a1, a2, a3, b0, b1, ... , bk-1
+
+  // plug in all t values from [0, k] into spline equation to get final points
+
+  double a0x = matrixX(0, D);
+  double a1x = matrixX(1, D);
+  double a2x = matrixX(2, D);
+  double a3x = matrixX(3, D);
+
+  double a0y = matrixY(0, D);
+  double a1y = matrixY(1, D);
+  double a2y = matrixY(2, D);
+  double a3y = matrixY(3, D);
+
+  std::vector<double> bx;
+  std::vector<double> by;
+
+  //push back coefficients
+  for(int i = 4; i < D; ++i)
+  {
+    bx.push_back(matrixX(i, D));
+    by.push_back(matrixY(i, D));
+  }
+
+  for (int i = 0; i < quality; ++i)
+  {
+    double t = (i * K) / (quality - 1.0);
+
+    double x = a0x + a1x * t + a2x * t * t + a3x * t * t * t;
+    double y = a0y + a1y * t + a2y * t * t + a3y * t * t * t;
+
+    for(int j = 0; j < D - 4; ++j)
+    {
+      if (t < j + 1)
+      {
+        x += 0;
+        y += 0;
 
       }
+      else
+      {
+        x += bx[j] * pow((t - (j + 1.0)), 3);
+        y += by[j] * pow((t - (j + 1.0)), 3);
 
-      //set the current X and Y of this arc between two points
-      currentX += delta * double(DivDiffTable[j][0].x);
-      currentY += delta * double(DivDiffTable[j][0].y);
+      }
     }
-    //explicately use the imvec2 points
-    Project4::points.push_back(ImVec2{ float(currentX),  float(currentY) });
-   
-  }
 
+
+    Project4::points.push_back(ImVec2{ float(x),  float(y) });
+  }
 }
+
+

@@ -26,18 +26,8 @@ public:
 
   float BernsteinBasis(int i, int d, float t);
   ControlPoint LerpControlPoints(ControlPoint& P1, ControlPoint& P2, float t = 0.5f);
-  
-  struct SetsOfPoints
-  {
-    std::vector<ControlPoint> lhs;
-    std::vector<ControlPoint> rhs;
-  };
-
-  void DividedDifferenceTable(const std::vector<ControlPoint>& points);
-
 
 private:
-  Mat<double> matrix{ 5,5 };
 
   std::vector<ImVec2> points;
   std::vector<std::vector<ControlPoint>> controlPointCopy2D;
