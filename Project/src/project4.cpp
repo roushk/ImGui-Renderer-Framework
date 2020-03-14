@@ -160,7 +160,7 @@ void Project4::draw_menus()
   // Create drop-down menu button
   if (ImGui::BeginMenu("Project 4 Options"))
   {
-    if (ImGui::MenuItem("Newton Form", nullptr, usingNLI))
+    if (ImGui::MenuItem("Bezier Spline", nullptr, usingNLI))
     {
       
     }
