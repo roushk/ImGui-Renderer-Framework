@@ -75,6 +75,9 @@
     <ClCompile Include="src\project4.cpp">
       <Filter>Projects</Filter>
     </ClCompile>
+    <ClCompile Include="src\project7.cpp">
+      <Filter>Projects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\imgui\imgui.h">
@@ -181,6 +184,9 @@
     </ClInclude>
     <ClInclude Include="inc\Mat.hpp">
       <Filter>External Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\project7.hpp">
+      <Filter>Projects</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
