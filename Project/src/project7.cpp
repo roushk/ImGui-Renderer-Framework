@@ -23,14 +23,10 @@ Project7::Project7()
 
 void Project7::reset()
 {
-  knotSequence.clear();
-  for(unsigned i = 0; i < dValue + controlPoints.size() + 1; ++i)
-  {
-    knotSequence.push_back(i);
-  }
-
   BernsteinPoly.SetQuality(maxDegree);
   points.resize(quality);
+
+
 
   ResizeControlPoints();
   drawBox = true;
@@ -52,6 +48,13 @@ void Project7::ResizeControlPoints()
   for (unsigned i = 0; i < degree + 1; ++i)
   {
     controlPoints[i].x = (i / (float)degree);
+  }
+
+  knotSequence.clear();
+  for (unsigned i = 0; i < dValue + controlPoints.size() + 1; ++i)
+  {
+    knotSequence.push_back(i);
+
   }
   CalculatePoints();
 }
@@ -433,7 +436,7 @@ void Project7::CalculatePoints()
     //Need the double precision for more than 16 points
 
     //set the t value to the delta t between each point and the quality
-    double t = i * double((controlPoints.size() - 1) / double(quality - 1));
+    double t = dValue + (i * double((controlPoints.size() - 1) / double(quality - 1)));
 
     double currentX = 0;
     double currentY = 0;
@@ -449,8 +452,8 @@ void Project7::CalculatePoints()
       }
 
       //set the current X and Y of this arc between two points
-      currentX += delta * double(DivDiffTable[j][0].x);
-      currentY += delta * double(DivDiffTable[j][0].y);
+      //currentX += delta * double(DivDiffTable[dValue][J - 1].x);
+      //currentY += delta * double(DivDiffTable[dValue][J - 1].y);
     }
     //explicately use the imvec2 points
     Project7::points.push_back(ImVec2{ float(currentX),  float(currentY) });
