@@ -425,27 +425,7 @@ void Project7::CalculatePoints()
   int J = tValueNLI; //J is an int where the T value is between J and J + 1, ex for t = 5.5, J = 5
   //int Jmax = N - dValue;
 
-  //knotSequence is t0 to tN where curve is defined from td to tN-d and ti <= ti+1
-
-  //for p = 1 to d
-  for (int p = 1; p < dValue; ++p)
-  {
-    //Shell Loop
-    for (int i = J - dValue + p; i < J; ++i)
-    {
-      /*
-       P[p][i] = (t - ti)/(t of (i+d - (p-1)) - ti) * P[p-1][i]
-       */
-      //assuming that knotSequence[J] =
-      DivDiffTable[p][i] =
-        DivDiffTable[p - 1][i] * ((tValueNLI - knotSequence[i]) /
-        (knotSequence[i + dValue - (p - 1)] - knotSequence[i])) +
-        DivDiffTable[p - 1][i - 1] * ((knotSequence[i + dValue - (p - 1)] - tValueNLI) /
-        (knotSequence[i + dValue - (p - 1)] - knotSequence[i]));
-
-    }
-  }
-
+  
 
   //construct the Newton Form for t values td to tN-d
   for (unsigned i = 0; i < quality; ++i)
@@ -453,27 +433,28 @@ void Project7::CalculatePoints()
     //Need the double precision for more than 16 points
 
     //set the t value to the delta t between each point and the quality
-    double t = (i * double((controlPoints.size() - 1) / double(quality - 1)));
+    double t =  (i * double((controlPoints.size() - 1) / double(quality - 1)));
 
-    double currentX = 0;
-    double currentY = 0;
-
-    for (unsigned j = 0; j < controlPoints.size(); ++j)
+    for (int p = 1; p <= dValue; ++p)
     {
-      double delta = 1.0;
-      for (unsigned k = 0; k < j; ++k)
+      //Shell Loop
+      for (int i = J - dValue + p; i <= J; ++i)
       {
-        //set the point to its location inside of the range from the start of this point to the end of it
-        delta *= t - k;
+        /*
+         P[p][i] = (t - ti)/(t of (i+d - (p-1)) - ti) * P[p-1][i]
+         */
+         //assuming that knotSequence[J] =
+        DivDiffTable[p][i] =
+          DivDiffTable[p - 1][i] * (((J + t) - knotSequence[i]) /
+          (knotSequence[i + dValue - (p - 1)] - knotSequence[i])) +
+          DivDiffTable[p - 1][i - 1] * ((knotSequence[i + dValue - (p - 1)] - (J + t)) /
+          (knotSequence[i + dValue - (p - 1)] - knotSequence[i]));
 
       }
-
-      //set the current X and Y of this arc between two points
-      currentX += delta * double(DivDiffTable[dValue][J].x);
-      currentY += delta * double(DivDiffTable[dValue][J].y);
     }
+ 
     //explicately use the imvec2 points
-    Project7::points.push_back(ImVec2{ float(currentX),  float(currentY) });
+    Project7::points.push_back(DivDiffTable[dValue][J].ToImVec2());
 
   }
 }
