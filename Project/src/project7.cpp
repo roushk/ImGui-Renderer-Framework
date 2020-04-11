@@ -143,6 +143,19 @@ void Project7::draw_editors()
   int oldDegree = degree;
   static ImVec2 windowSize; // Default initializes to { 0, 0 }
 
+  bool changed = false;
+
+  if (oldDegree != degree)
+  {
+    changed = true;
+    //Bounds check degree
+    degree = std::max<int>(degree, 1);
+    degree = std::min<int>(degree, maxDegree);
+    ResizeControlPoints();
+
+
+  }
+
   // Only show editor window if any editor buttons are active
   if (toggleDrawCircle)
   {
@@ -157,7 +170,6 @@ void Project7::draw_editors()
       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_AlwaysAutoResize))
     {
       
-      bool changed = false;
       int S = controlPoints.size() - 1;
 
       //D range from 1 to NumPoints - 1
@@ -172,7 +184,10 @@ void Project7::draw_editors()
         }
       }
 
+      dValue = std::min(dValue, S);
       int N = S + dValue + 1; //N = s + d + 1
+      tValueNLI = std::min(std::max(tValueNLI, float(dValue)), float(N - dValue - 0.001f));
+
 
       if (ImGui::SliderFloat("T value", &tValueNLI, dValue, N - dValue - 0.001f))
       {
@@ -182,7 +197,6 @@ void Project7::draw_editors()
       if(changed)
       {
 
-        tValueNLI = std::min(std::max(tValueNLI, float(dValue)), float(N - dValue - 0.001f));
         CalculatePoints();
       }
 
@@ -196,14 +210,7 @@ void Project7::draw_editors()
     ImGui::PopStyleVar(2);
   }
 
-  if (oldDegree != degree)
-  {
 
-    //Bounds check degree
-    degree = std::max<int>(degree, 1);
-    degree = std::min<int>(degree, maxDegree);
-    ResizeControlPoints();
-  }
 }
 
 void Project7::draw_menus()
@@ -289,6 +296,8 @@ float Project7::NLIFunc(std::vector<ControlPoint>& points, float t)
 
 void Project7::RecalculateShellNLI()
 {
+  if (controlPoints.size() == 0)
+    return;
 
   controlPointCopy2D.resize(controlPoints.size());
 
@@ -370,24 +379,33 @@ t value ranges from d to N
 void Project7::CalculatePoints()
 {
   Project7::points.clear();
+  if (controlPoints.size() == 0 || controlPoints.size() == 1)
+    return;
+
   //set of both points in two new vectors
   SetsOfPoints newPoints;
+  
   int S = controlPoints.size() - 1;
+  dValue = std::max(0, dValue);
+  dValue = std::min(dValue, S);
+  int N = S + dValue + 1; //N = s + d + 1
+  tValueNLI = std::min(std::max(tValueNLI, float(dValue)), float(N - dValue - 0.001f));
+
   //construct the div diff table to hold the P[p]i points
-  std::vector<std::vector<ControlPointDouble>> DivDiffTable(S);
+  std::vector<std::vector<ControlPointDouble>> DivDiffTable(S + 1);
 
   //initialize the first row to the points
-  for (unsigned i = 0; i < S; ++i)
+  for (unsigned i = 0; i < S + 1; ++i)
   {
     //same initialization as NLI, decreasing size shell
-    DivDiffTable.at(i).resize(S);
+    DivDiffTable.at(i).resize(S + 1);
 
   }
 
   //[0]g = g(0)
   //the [0] values
-  //set P[0]i for i to s
-  for (unsigned i = 0; i < S; ++i)
+  //set P[0]i for i = 0 to i = s
+  for (unsigned i = 0; i < S + 1; ++i)
   {
     DivDiffTable[0][i].x = controlPoints[i].x;
     DivDiffTable[0][i].y = controlPoints[i].y;
@@ -410,10 +428,10 @@ void Project7::CalculatePoints()
   //knotSequence is t0 to tN where curve is defined from td to tN-d and ti <= ti+1
 
   //for p = 1 to d
-  for (unsigned p = 1; p < dValue; ++p)
+  for (int p = 1; p < dValue; ++p)
   {
     //Shell Loop
-    for (unsigned i = J - dValue + p; i < J; ++i)
+    for (int i = J - dValue + p; i < J; ++i)
     {
       /*
        P[p][i] = (t - ti)/(t of (i+d - (p-1)) - ti) * P[p-1][i]
@@ -429,19 +447,18 @@ void Project7::CalculatePoints()
   }
 
 
-
-  //construct the Newton Form for all T values 0 -> d
+  //construct the Newton Form for t values td to tN-d
   for (unsigned i = 0; i < quality; ++i)
   {
     //Need the double precision for more than 16 points
 
     //set the t value to the delta t between each point and the quality
-    double t = dValue + (i * double((controlPoints.size() - 1) / double(quality - 1)));
+    double t = (i * double((controlPoints.size() - 1) / double(quality - 1)));
 
     double currentX = 0;
     double currentY = 0;
 
-    for (unsigned j = 0; j < S; ++j)
+    for (unsigned j = 0; j < controlPoints.size(); ++j)
     {
       double delta = 1.0;
       for (unsigned k = 0; k < j; ++k)
@@ -452,8 +469,8 @@ void Project7::CalculatePoints()
       }
 
       //set the current X and Y of this arc between two points
-      //currentX += delta * double(DivDiffTable[dValue][J - 1].x);
-      //currentY += delta * double(DivDiffTable[dValue][J - 1].y);
+      currentX += delta * double(DivDiffTable[dValue][J].x);
+      currentY += delta * double(DivDiffTable[dValue][J].y);
     }
     //explicately use the imvec2 points
     Project7::points.push_back(ImVec2{ float(currentX),  float(currentY) });
