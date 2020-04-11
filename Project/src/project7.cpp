@@ -119,7 +119,7 @@ void Project7::draw()
     ImGui::RenderLine(controlPoints[i].ToImVec2(), controlPoints[i + 1].ToImVec2(), white, lineThickness);
   }
 
-  RecalculateShellNLI();
+  //RecalculateShellNLI();
 
 
   if (currentMode == CurrentMode::NLI)
