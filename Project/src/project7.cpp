@@ -10,6 +10,7 @@
 
 #include <sstream>
 #include <iomanip> 
+#include "project3.hpp"
 
 
 Project7::Project7()
@@ -22,10 +23,16 @@ Project7::Project7()
 
 void Project7::reset()
 {
+  knotSequence.clear();
+  for(unsigned i = 0; i < dValue + controlPoints.size() + 1; ++i)
+  {
+    knotSequence.push_back(i);
+  }
+
   BernsteinPoly.SetQuality(maxDegree);
   points.resize(quality);
-  ResizeControlPoints();
 
+  ResizeControlPoints();
   drawBox = true;
   drawCircle = true;
   toggleDrawCircle = true;
@@ -34,7 +41,7 @@ void Project7::reset()
 
 std::string Project7::name()
 {
-  return "Project 2";
+  return "Project 7";
 }
 
 void Project7::ResizeControlPoints()
@@ -147,13 +154,32 @@ void Project7::draw_editors()
       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_AlwaysAutoResize))
     {
       
+      bool changed = false;
+      int S = controlPoints.size() - 1;
 
-      if (ImGui::SliderFloat("T value", &tValueNLI, 0, 1))
+      //D range from 1 to NumPoints - 1
+      //T range d to N - d
+      if (ImGui::SliderInt("D value", &dValue, 1, S))
       {
-        CalculatePoints();
+        changed = true;
+        knotSequence.clear();
+        for (unsigned i = 0; i < dValue + controlPoints.size() + 1; ++i)
+        {
+          knotSequence.push_back(i);
+        }
       }
-      if (ImGui::SliderInt("D value", &dValue, 0, maxDegree))
+
+      int N = S + dValue + 1; //N = s + d + 1
+
+      if (ImGui::SliderFloat("T value", &tValueNLI, dValue, N - dValue - 0.001f))
       {
+        changed = true;
+      }
+
+      if(changed)
+      {
+
+        tValueNLI = std::min(std::max(tValueNLI, float(dValue)), float(N - dValue - 0.001f));
         CalculatePoints();
       }
 
@@ -310,148 +336,125 @@ ControlPoint Project7::LerpControlPoints(ControlPoint& P1, ControlPoint& P2, flo
 
 }
 
+/*
+Inputs:
+N = num control points
+s = N - 1
+d = 3 by default, degree value
+Points P0-PN
+knot sequence of size (N + Degree + 1)
+
+
+Interval is [td, tN-d]
+
+ex.
+t3,t(numPoints - 3)
+
+output func gamma(t)
+
+stage p = 0 to p = 3 (d)
+i = J - d + p to J
+
+
+
+
+
+t value ranges from d to N
+ */
+
+
 
 void Project7::CalculatePoints()
 {
-
-  points.clear();
-  if (currentMode == CurrentMode::NLI)
-  {
-    //NLI
-    for (unsigned i = 0; i < quality; ++i)
-    {
-
-      //float t = current x value of this point on the graph (the current i / quality as float)
-      float t = i / float(quality - 1);
-
-      //p(t) = p[a0,a1,a2,...aN](t) = (1 - t)p[a0,a1,a2,...a(N - 1)](t) + (t)p[a1,a2,...a(N)]
-      float p = 0;// = NLIFunc(controlPoints, t);
-      int depth = controlPoints.size();
-
-      std::vector<ControlPoint> controlPointCopy = std::vector(controlPoints.begin(), controlPoints.end());
-
-      for (unsigned j = 0; j < depth - 1; ++j)
-      {
-        for (unsigned k = 0; k < depth - 1; ++k)
-        {
-          
-          controlPointCopy[k] = controlPointCopy[k] * (1 - t) + controlPointCopy[k + 1] * t;
-          //Sett the size 
-
-        }
-      }
-
-      points.push_back(controlPointCopy[0].ToImVec2());
-    }
-  }
-  else if (currentMode == CurrentMode::BBForm)
-  {
-    //BB-Form BBForm
-    for (unsigned i = 0; i < quality; ++i)
-    {
-
-      float t = i / float(quality - 1);
-
-      ControlPoint p{ 0,0 };
-
-      //for each point P[i] in array P[Size]
-      //gamma(t) = summation from i = 0 to d of (Bernstinen Basis(i,d,t) * P[i]
-      for (unsigned j = 0; j < controlPoints.size(); ++j)
-      {
-        p += controlPoints[j] * BernsteinBasis(j, controlPoints.size() - 1, t);
-      }
-
-      points.push_back(p.ToImVec2());
-
-    }
-  }
-  //  if (currentMode == CurrentMode::MidpointSub)
-  else
-  {
-    //Midpoint Subdivision
-    if (controlPoints.size() == 0)
-      return;
-
-    std::vector<std::vector<ControlPoint>> subdivisidedPoints{ { controlPoints } };
-
-    for (unsigned i = 0; i < maxSubdivisions; ++i)
-    {
-
-      std::vector<std::vector<ControlPoint>> tempSubdividedPoints;
-
-
-      for (unsigned j = 0; j < subdivisidedPoints.size(); ++j)
-      {
-        Project7::SetsOfPoints newPoints = SubdividePoints(subdivisidedPoints[j]);
-
-        //subdivide points
-          
-        tempSubdividedPoints.push_back(newPoints.lhs);
-        tempSubdividedPoints.push_back(newPoints.rhs);
-      }
-
-      subdivisidedPoints.swap(tempSubdividedPoints);
-    }
-
-    //for each point P[i] in array P[Size]
-    //gamma(t) = summation from i = 0 to d of (Bernstinen Basis(i,d,t) * P[i]
-    for (unsigned i = 0; i < subdivisidedPoints.size(); ++i)
-    {
-        
-      for (unsigned j = 0; j < subdivisidedPoints[i].size(); ++j)
-      {
-
-        points.push_back(subdivisidedPoints[i][j].ToImVec2());
-      }
-    }
-    //push back last point
-    points.push_back(subdivisidedPoints.back().back().ToImVec2());
-
-
-  }
-}
-
-
-Project7::SetsOfPoints Project7::SubdividePoints(const std::vector<ControlPoint>& points)
-
-{
+  Project7::points.clear();
   //set of both points in two new vectors
-  SetsOfPoints newPoints; 
-
-  //construct the shell for the points
-  std::vector<std::vector<ControlPoint>> pointShell(points.size());
+  SetsOfPoints newPoints;
+  int S = controlPoints.size() - 1;
+  //construct the div diff table to hold the P[p]i points
+  std::vector<std::vector<ControlPointDouble>> DivDiffTable(S);
 
   //initialize the first row to the points
-
-  for (unsigned i = 1; i < pointShell.size(); ++i)
+  for (unsigned i = 0; i < S; ++i)
   {
     //same initialization as NLI, decreasing size shell
-    pointShell.at(i).resize(pointShell.size() - i);
+    DivDiffTable.at(i).resize(S);
 
   }
-  pointShell.at(0) = points;
 
-  for (unsigned i = 1; i < pointShell.size(); ++i)
+  //[0]g = g(0)
+  //the [0] values
+  //set P[0]i for i to s
+  for (unsigned i = 0; i < S; ++i)
+  {
+    DivDiffTable[0][i].x = controlPoints[i].x;
+    DivDiffTable[0][i].y = controlPoints[i].y;
+  }
+
+  //pointShell of 0 is the [0]g values
+  //pointShell of 1 is the [0,1]g values and so in until its just 1 value
+  //the nth vector has the values we want at 0 and end - 1 and the final vector has just 1 value
+
+  /*
+    t exists in [td,tN-d]
+  findJ that t exists in [tJ,tJ+1)
+
+   */
+
+   //calculate the [0,1] to [0,1...d] values
+  int J = tValueNLI; //J is an int where the T value is between J and J + 1, ex for t = 5.5, J = 5
+  //int Jmax = N - dValue;
+
+  //knotSequence is t0 to tN where curve is defined from td to tN-d and ti <= ti+1
+
+  //for p = 1 to d
+  for (unsigned p = 1; p < dValue; ++p)
   {
     //Shell Loop
-    for (unsigned j = 0; j < pointShell.size() - i; ++j)
+    for (unsigned i = J - dValue + p; i < J; ++i)
     {
-      //User 0.5 as t value
-      pointShell[i][j] = pointShell[i - 1][j] * (0.5f) + pointShell[i - 1][j + 1] * 0.5f;
+      /*
+       P[p][i] = (t - ti)/(t of (i+d - (p-1)) - ti) * P[p-1][i]
+       */
+      //assuming that knotSequence[J] =
+      DivDiffTable[p][i] =
+        DivDiffTable[p - 1][i] * ((tValueNLI - knotSequence[i]) /
+        (knotSequence[i + dValue - (p - 1)] - knotSequence[i])) +
+        DivDiffTable[p - 1][i - 1] * ((knotSequence[i + dValue - (p - 1)] - tValueNLI) /
+        (knotSequence[i + dValue - (p - 1)] - knotSequence[i]));
+
     }
   }
 
-  //push back lhs
-  for (unsigned i = 0; i < pointShell.size(); ++i)
-  {
-    newPoints.lhs.push_back(pointShell[i][0]);
-  }
 
-  //push back rhs
-  for (int i = pointShell.size() - 1; i >= 0; --i)
-  {
-    newPoints.rhs.push_back(pointShell[i][pointShell[i].size() - 1]);
-  }
 
-  return newPoints;
+  //construct the Newton Form for all T values 0 -> d
+  for (unsigned i = 0; i < quality; ++i)
+  {
+    //Need the double precision for more than 16 points
+
+    //set the t value to the delta t between each point and the quality
+    double t = i * double((controlPoints.size() - 1) / double(quality - 1));
+
+    double currentX = 0;
+    double currentY = 0;
+
+    for (unsigned j = 0; j < S; ++j)
+    {
+      double delta = 1.0;
+      for (unsigned k = 0; k < j; ++k)
+      {
+        //set the point to its location inside of the range from the start of this point to the end of it
+        delta *= t - k;
+
+      }
+
+      //set the current X and Y of this arc between two points
+      currentX += delta * double(DivDiffTable[j][0].x);
+      currentY += delta * double(DivDiffTable[j][0].y);
+    }
+    //explicately use the imvec2 points
+    Project7::points.push_back(ImVec2{ float(currentX),  float(currentY) });
+
+  }
 }
+

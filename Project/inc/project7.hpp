@@ -50,11 +50,11 @@ private:
   bool usingBBform = false;
   bool usingMidSub = false;
 
-  int degree = 1;
+  int degree = 6;
 
-  float tValueNLI = 0.5f;
+  float tValueNLI = 3.5f;
   
-  int dValue = 0;
+  int dValue = 3;
 
   int maxSubdivisions = 6;
 
@@ -81,4 +81,5 @@ private:
   const ImVec4 colorSoftWhiteBlue = { 0.74f, 0.74f, 0.98f, 1.f };
 
   const ImVec4 colorWhite = { 1,1,1,1 };
+
 };
