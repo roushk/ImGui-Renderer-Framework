@@ -1,7 +1,7 @@
-#include <pch.h>
+#include <pch.hpp>
 #include "Camera.h"
 
-//const float PI = 4.0f*atanf(1.0f);
+const float PI = 4.0f*atanf(1.0f);
 
 Camera::Camera(void)
 {

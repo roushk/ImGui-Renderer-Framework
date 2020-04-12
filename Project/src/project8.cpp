@@ -17,6 +17,7 @@ Project8::Project8()
   //upper left to lower right
   ImGui::SetViewRect({ -0.2f, 3.4f }, { 1.2f, -3.4f });
   reset();
+  currentCamera = Camera({ 0,0,-5 }, { 0,0,-1 }, { 0,1,0 }, 90, 1, nearPlane, farPlane);
 }
 
 
@@ -30,6 +31,7 @@ void Project8::reset()
   drawCircle = true;
   toggleDrawCircle = true;
   circleRadius = 15.f;
+  
 }
 
 std::string Project8::name()
@@ -49,6 +51,17 @@ void Project8::ResizeControlPoints()
   //CalculatePoints();
 }
 
+
+
+//proj * view * model * vert
+void Project8::UpdateCamera()
+{
+  projectionMatrix = cameraToNDC(currentCamera, windowX, windowY, nearPlane, farPlane);
+  viewMatrix = worldToCamera(currentCamera);
+}
+
+
+
 void Project8::DrawFunction()
 {
   std::vector<ImVec2> points2D;
@@ -56,8 +69,16 @@ void Project8::DrawFunction()
 
   for(auto& pt: points)
   {
-    //persp proj
-    
+    //proj * view * model * vert
+    //vert /= vert.w
+
+
+    //persp proj cpu side
+    glm::vec4 vert = projectionMatrix * viewMatrix * glm::vec4(pt,1);
+
+    //perspective divide
+    vert /= -vert.w;
+    points2D.push_back({ vert.x,vert.y });
   }
 
   for (unsigned i = 1; i < points.size(); ++i)
@@ -209,13 +230,6 @@ ControlPoint Project8::LerpControlPoints(ControlPoint& P1, ControlPoint& P2, flo
 
 }
 
-//proj * view * model * vert
-void Project8::UpdateCamera()
-{
-  projectionMatrix = cameraToNDC(currentCamera, windowX, windowY, nearPlane, farPlane);
-  viewMatrix = worldToCamera(currentCamera);
-}
-
 
 void Project8::CalculatePoints()
 {
@@ -283,9 +297,13 @@ void Project8::CalculatePoints()
 
   for (int i = 0; i < N; ++i)
   {
-    matrixX(i, D) = controlPoints3D[i].x;
-    matrixY(i, D) = controlPoints3D[i].y;
-    matrixZ(i, D) = controlPoints3D[i].z;
+    matrixX(i, D) = controlPoints[i].x;
+    matrixY(i, D) = controlPoints[i].y;
+    matrixZ(i, D) = 0;
+
+    //matrixX(i, D) = controlPoints3D[i].x;
+    //matrixY(i, D) = controlPoints3D[i].y;
+    //matrixZ(i, D) = controlPoints3D[i].z;
 
   }
 
@@ -341,7 +359,7 @@ void Project8::CalculatePoints()
   {
     bx.push_back(matrixX(i, D));
     by.push_back(matrixY(i, D));
-    by.push_back(matrixZ(i, D));
+    bz.push_back(matrixZ(i, D));
 
   }
 
@@ -351,7 +369,7 @@ void Project8::CalculatePoints()
 
     double x = a0x + a1x * t + a2x * t * t + a3x * t * t * t;
     double y = a0y + a1y * t + a2y * t * t + a3y * t * t * t;
-    double z = a0y + a1z * t + a2z * t * t + a3z * t * t * t;
+    double z = a0z + a1z * t + a2z * t * t + a3z * t * t * t;
 
     for (int j = 0; j < D - 4; ++j)
     {

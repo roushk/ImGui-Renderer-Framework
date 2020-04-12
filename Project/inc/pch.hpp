@@ -35,3 +35,5 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/vector_angle.hpp>
 
+#undef near
+#undef far

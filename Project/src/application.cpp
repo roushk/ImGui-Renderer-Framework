@@ -8,6 +8,7 @@
 
 
 #include "project_example.hpp"
+#include "Project8.hpp"
 
 int Application::windowHeight = 600;
 int Application::windowWidth = 800;
@@ -223,12 +224,13 @@ void Application::init_projects()
   projects.emplace_back(std::make_unique<Project3>(Project3{}));
   projects.emplace_back(std::make_unique<Project4>(Project4{}));
   projects.emplace_back(std::make_unique<Project7>(Project7{}));
+  projects.emplace_back(std::make_unique<Project8>(Project8{}));
 
   // projects.emplace_back(std::make_unique<Project2>(Project2{}));
   // ... etc
 
   // set startup project
-  currentProject = projects[4].get();
+  currentProject = projects[5].get();
 }
 
 HRESULT Application::create_device()
