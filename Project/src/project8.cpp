@@ -23,6 +23,8 @@ Project8::Project8()
 
 void Project8::reset()
 {
+  UpdateCamera();
+
   BernsteinPoly.SetQuality(maxDegree);
   points.resize(quality);
   ResizeControlPoints();
@@ -31,7 +33,9 @@ void Project8::reset()
   drawCircle = true;
   toggleDrawCircle = true;
   circleRadius = 15.f;
-  
+
+  CalculatePoints();
+
 }
 
 std::string Project8::name()
@@ -56,6 +60,8 @@ void Project8::ResizeControlPoints()
 //proj * view * model * vert
 void Project8::UpdateCamera()
 {
+  
+
   projectionMatrix = cameraToNDC(currentCamera, windowX, windowY, nearPlane, farPlane);
   viewMatrix = worldToCamera(currentCamera);
 }
@@ -159,7 +165,8 @@ void Project8::draw()
 void Project8::draw_editors()
 {
   
-
+  float dt = ImGui::GetIO().DeltaTime;
+  const float speed = 10.0f * dt;
 
   int oldDegree = degree;
   static ImVec2 windowSize; // Default initializes to { 0, 0 }
@@ -187,6 +194,81 @@ void Project8::draw_editors()
     ImGui::PopStyleVar(2);
   }
 
+  if(displayCameraControls)
+  {
+    ImGui::Begin("CameraControls");
+   
+    if(ImGui::Button("Pan Left"))
+    {
+      currentCamera.leftRight(speed);
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("Pan Right"))
+    {
+      currentCamera.leftRight(-speed);
+    }
+
+    if(ImGui::Button("Pan Forward"))
+    {
+      currentCamera.forward(-speed);
+    }
+
+    ImGui::SameLine();
+    if(ImGui::Button("Pan Backward"))
+    {
+      currentCamera.forward(speed * 2.0f);
+    }
+
+    if(ImGui::Button("Pan Up"))
+    {
+      currentCamera.upDown(-speed * 2.0f);
+    }
+
+    
+    ImGui::SameLine();
+    if(ImGui::Button("Pan Down"))
+    {
+      currentCamera.upDown(speed);
+    }
+
+    if(ImGui::Button("Rotate Left"))
+    {
+      currentCamera.yaw(speed * 2.0f);
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("Rotate Right"))
+    {
+      currentCamera.yaw(-speed * 2.0f);
+    }
+
+    if(ImGui::Button("Rotate Up"))
+    {
+      currentCamera.pitch(speed* 2.0f);
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("Rotate Down"))
+    {
+      currentCamera.pitch(-speed * 2.0f);
+    }
+
+    if(ImGui::Button("Roll Left"))
+    {
+      currentCamera.roll(speed * 0.5f);
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("Roll Right"))
+    {
+      currentCamera.roll(-speed * 0.5f);
+    }
+
+    if (ImGui::Button("Reset Roll"))
+    {
+      currentCamera.ResetRoll();
+    }
+    ImGui::End();
+
+  }
+
   if (oldDegree != degree)
   {
 
@@ -202,7 +284,7 @@ void Project8::draw_menus()
   // Create drop-down menu button
   if (ImGui::BeginMenu("Project 8 Options"))
   {
-    if (ImGui::MenuItem("Bezier Spline", nullptr, usingNLI))
+    if (ImGui::MenuItem("Camera Controls", nullptr, displayCameraControls))
     {
 
     }

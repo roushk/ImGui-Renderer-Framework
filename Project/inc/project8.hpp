@@ -99,7 +99,7 @@ private:
 
   bool drawBox = false;
   bool drawPointLocations = false;
-  bool usingNLI = true;
+  bool displayCameraControls = true;
   bool usingBBform = false;
   bool usingMidSub = false;
 
@@ -143,10 +143,12 @@ private:
   float windowX = 1;
   float windowY = 1;
   float nearPlane = 0.1f;
-  float farPlane = 1000.f;
+  float farPlane = 100.f;
 
   glm::mat4 projectionMatrix;
   glm::mat4 viewMatrix;
+
+  glm::vec2 mouseWorldCoords;
 
 
 };
