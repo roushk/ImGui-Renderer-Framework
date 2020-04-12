@@ -1,7 +1,6 @@
 #include <pch.hpp>
 
-#include "project8.hpp"
-#include "project1.hpp"
+#include "Project8.hpp"
 
 
 #include "imgui_distance.hpp"
@@ -10,7 +9,7 @@
 
 #include <sstream>
 #include <iomanip> 
-#include "project3.hpp"
+#include "Projection.h"
 
 
 Project8::Project8()
@@ -25,11 +24,9 @@ void Project8::reset()
 {
   BernsteinPoly.SetQuality(maxDegree);
   points.resize(quality);
-
-
-
   ResizeControlPoints();
-  drawBox = true;
+
+  drawBox = false;
   drawCircle = true;
   toggleDrawCircle = true;
   circleRadius = 15.f;
@@ -37,7 +34,7 @@ void Project8::reset()
 
 std::string Project8::name()
 {
-  return "Project 7";
+  return "Project 8";
 }
 
 void Project8::ResizeControlPoints()
@@ -49,27 +46,32 @@ void Project8::ResizeControlPoints()
   {
     controlPoints[i].x = (i / (float)degree);
   }
-
-  knotSequence.clear();
-  for (unsigned i = 0; i < dValue + controlPoints.size() + 1; ++i)
-  {
-    knotSequence.push_back(i);
-
-  }
-  CalculatePoints();
+  //CalculatePoints();
 }
 
 void Project8::DrawFunction()
 {
+  std::vector<ImVec2> points2D;
+  points2D.reserve(points.size());
+
+  for(auto& pt: points)
+  {
+    //persp proj
+    
+  }
+
   for (unsigned i = 1; i < points.size(); ++i)
   {
-    ImGui::RenderLine(points[i - 1], points[i], ImGui::ColorConvertFloat4ToU32(colorSoftLightGreen));
+    ImGui::RenderLine(points2D[i - 1], points2D[i], ImGui::ColorConvertFloat4ToU32(colorSoftLightGreen));
   }
 }
 
 
 void Project8::draw()
 {
+
+  UpdateCamera();
+
   // Basic colors that work well with the background
   const ImU32 boxColorPacked = ImGui::ColorConvertFloat4ToU32(colorSoftLightGray);
   const ImU32 circleColorPacked = ImGui::ColorConvertFloat4ToU32(colorSoftBlue);
@@ -80,11 +82,11 @@ void Project8::draw()
 
   if (drawBox)
   {
-    ImGui::RenderRect({ 0.0f, 3.0f }, { 1.0f, -3.0f }, boxColorPacked, boxRounding, ImDrawCornerFlags_All, boxThickness);
-    
-    ImGui::RenderLine({ 0.0f, 2.0f }, { 1.0f, 2.0f }, boxColorPacked, lineThickness);
-    ImGui::RenderLine({ 0.0f, 1.0f }, { 1.0f, 1.0f }, boxColorPacked, lineThickness);
-    ImGui::RenderLine({ 0.0f, 0.0f }, { 1.0f, 0.0f }, boxColorPacked, lineThickness * 3.0f);
+    ImGui::RenderRect({ 0.0f,  3.0f }, { 1.0f, -3.0f }, boxColorPacked, boxRounding, ImDrawCornerFlags_All, boxThickness);
+
+    ImGui::RenderLine({ 0.0f,  2.0f }, { 1.0f,  2.0f }, boxColorPacked, lineThickness);
+    ImGui::RenderLine({ 0.0f,  1.0f }, { 1.0f,  1.0f }, boxColorPacked, lineThickness);
+    ImGui::RenderLine({ 0.0f,  0.0f }, { 1.0f,  0.0f }, boxColorPacked, lineThickness * 3.0f);
     ImGui::RenderLine({ 0.0f, -1.0f }, { 1.0f, -1.0f }, boxColorPacked, lineThickness);
     ImGui::RenderLine({ 0.0f, -2.0f }, { 1.0f, -2.0f }, boxColorPacked, lineThickness);
 
@@ -100,61 +102,46 @@ void Project8::draw()
     CalculatePoints();
   }
 
+  /*
+   *if(Camera moved, point places, settings changed)
+   *  recalculate 3D control points to 2D control point positions
+   *
+   */
 
-  for (unsigned i = 0; i < controlPoints.size(); ++i)
-  {
-    
-    std::stringstream pos;
-    pos << std::setfill(' ') << std::setw(4) << std::setprecision(2) << float(controlPoints[i].x) << " ," << controlPoints[i].y;
-    //std::string pos2 = pos.str();
-    ImGui::RenderText(controlPoints[i].ToImVec2(-0.061f,-0.2f), white, pos.str().c_str());
-
-    //Display which number point this is
-    //ImGui::RenderText(controlPoints[i].ToImVec2(-0.01f, 0.1f), white, std::to_string(i).c_str());
-    
-  }
-  
-  for (int i = 0; i < int(controlPoints.size()) - 1; ++i)
-  { 
-    ImGui::RenderLine(controlPoints[i].ToImVec2(), controlPoints[i + 1].ToImVec2(), white, lineThickness);
-  }
-
-  //RecalculateShellNLI();
-
-
-  if (currentMode == CurrentMode::NLI)
+  if (drawPointLocations)
   {
 
-    for (int i = 1; i < controlPointCopy2D.size(); ++i)
+    for (unsigned i = 0; i < controlPoints.size(); ++i)
     {
-      for (int j = 0; j < controlPointCopy2D[i].size() - 1; ++j)
-      {
-        ImGui::RenderLine(controlPointCopy2D[i][j].ToImVec2(), controlPointCopy2D[i][j + 1].ToImVec2(), blue, lineThickness);
-      }
+
+      std::stringstream pos;
+      pos << std::setfill(' ') << std::setw(4) << std::setprecision(2) << float(controlPoints[i].x) << " ," << controlPoints[i].y;
+      //std::string pos2 = pos.str();
+      ImGui::RenderText(controlPoints[i].ToImVec2(-0.061f, -0.2f), white, pos.str().c_str());
+
+      //Display which number point this is
+      //ImGui::RenderText(controlPoints[i].ToImVec2(-0.01f, 0.1f), white, std::to_string(i).c_str());
+
     }
   }
 
+  for (int i = 0; i < int(controlPoints.size()) - 1; ++i)
+  {
+    ImGui::RenderLine(controlPoints[i].ToImVec2(), controlPoints[i + 1].ToImVec2(), white, lineThickness);
+  }
+
+
   DrawFunction();
-  
+
 }
 
 void Project8::draw_editors()
 {
+  
+
+
   int oldDegree = degree;
   static ImVec2 windowSize; // Default initializes to { 0, 0 }
-
-  bool changed = false;
-
-  if (oldDegree != degree)
-  {
-    changed = true;
-    //Bounds check degree
-    degree = std::max<int>(degree, 1);
-    degree = std::min<int>(degree, maxDegree);
-    ResizeControlPoints();
-
-
-  }
 
   // Only show editor window if any editor buttons are active
   if (toggleDrawCircle)
@@ -169,39 +156,8 @@ void Project8::draw_editors()
       ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_AlwaysAutoResize))
     {
-      
-      int S = controlPoints.size() - 1;
 
-      //D range from 1 to NumPoints - 1
-      //T range d to N - d
-      if (ImGui::SliderInt("D value", &dValue, 1, S))
-      {
-        changed = true;
-        knotSequence.clear();
-        for (unsigned i = 0; i < dValue + controlPoints.size() + 1; ++i)
-        {
-          knotSequence.push_back(i);
-        }
-      }
-
-      dValue = std::min(dValue, S);
-      int N = S + dValue + 1; //N = s + d + 1
-      tValueNLI = std::min(std::max(tValueNLI, float(dValue)), float(N - dValue - 0.001f));
-
-
-      if (ImGui::SliderFloat("T value", &tValueNLI, dValue, N - dValue - 0.001f))
-      {
-        changed = true;
-      }
-
-      if(changed)
-      {
-
-        CalculatePoints();
-      }
-
-
-
+      ImGui::Text("Degree = %d", controlPoints.size());
 
       // Get window size for next drawing
       windowSize = ImGui::GetWindowSize(); // A little hacky, but it works
@@ -210,119 +166,33 @@ void Project8::draw_editors()
     ImGui::PopStyleVar(2);
   }
 
+  if (oldDegree != degree)
+  {
 
+    //Bounds check degree
+    degree = std::max<int>(degree, 1);
+    degree = std::min<int>(degree, maxDegree);
+    ResizeControlPoints();
+  }
 }
 
 void Project8::draw_menus()
 {
-  CurrentMode oldMode = currentMode;
   // Create drop-down menu button
-  if (ImGui::BeginMenu("Project 2 Options"))
+  if (ImGui::BeginMenu("Project 8 Options"))
   {
-    /*
-    if (ImGui::MenuItem("NLI", nullptr, usingNLI))
+    if (ImGui::MenuItem("Bezier Spline", nullptr, usingNLI))
     {
-      currentMode = CurrentMode::NLI;
-      
-    }
-    if (ImGui::MenuItem("BB-Form", nullptr, usingBBform))
-    {
-      currentMode = CurrentMode::BBForm;
-    }
-    if (ImGui::MenuItem("Midpoint Subdivision", nullptr, usingMidSub))
-    {
-      currentMode = CurrentMode::MidpointSub;
-    }
-    usingNLI = usingBBform = usingMidSub = false;
-    if (currentMode == CurrentMode::NLI)
-    {
-      usingNLI = true;
-    }
-    else if (currentMode == CurrentMode::BBForm)
-    {
-      usingBBform = true;
-    }
-    else
-    {
-      usingMidSub = true;
-    }
-    */
 
+    }
     // Make sure to end the menu
     ImGui::EndMenu();
-
-    //Relcalc points on swap
-    if (oldMode != currentMode)
-    {
-      CalculatePoints();
-    }
   }
-  
+
   // Add more ImGui::BeginMenu(...) for additional menus
 }
 
 
-//NLI recursive func
-float Project8::NLIFunc(std::vector<ControlPoint>& points, float t)
-{
-  //if 1 point
-  if (points.size() == 1)
-  {
-    return points[0].y;
-  }
-
-
-  //if 2+ points
-  if (points.size() >= 2)
-  {
-    std::vector<ControlPoint> lhs;
-    std::vector<ControlPoint> rhs;
-
-
-    lhs = std::vector(points.begin(), points.end() - 1);
-    rhs = std::vector(points.begin() + 1, points.end());
-
-    return (1 - t) * NLIFunc(lhs, t) + t * NLIFunc(rhs, t);
-  }
-  
-  return 0;
-
-}
-
-//(d,i) = (d-1,i-1) + (d-1, i)
-//(d,0) = (d,d) = 1
-//(d,y < 0) = (d, d + 1) = (0,d) = 0
-
-
-void Project8::RecalculateShellNLI()
-{
-  if (controlPoints.size() == 0)
-    return;
-
-  controlPointCopy2D.resize(controlPoints.size());
-
-
-  //initialize the first points (first row of t values)
-  controlPointCopy2D.at(0) = controlPoints;
-
-
-  for (unsigned i = 1; i < controlPointCopy2D.size(); ++i)
-  {
-    //resize to the size - i so cascading size
-    controlPointCopy2D.at(i).resize(controlPointCopy2D.size() - i);
-  }
-
-
-  for (unsigned i = 1; i < controlPointCopy2D.size(); ++i)
-  {
-    //Shell Loop
-    for (unsigned j = 0; j < controlPointCopy2D.size() - i; ++j)
-    {
-      controlPointCopy2D[i][j] = controlPointCopy2D[i - 1][j] * (1 - tValueNLI) + controlPointCopy2D[i - 1][j + 1] * tValueNLI;
-    }
-  }
-
-}
 
 
 float Project8::BernsteinBasis(int i, int d, float t)
@@ -330,15 +200,6 @@ float Project8::BernsteinBasis(int i, int d, float t)
   return float(BernsteinPoly.XChooseY(d, i)) * pow((1.0f - t), (d - i)) * pow((t), (i));
 }
 
-std::vector<ControlPoint> Project8::Subdivide(ControlPoint& P1, ControlPoint& P2, ControlPoint& P3, ControlPoint& P4)
-{
-  ControlPoint P1P2Midpoint = (P1 * 0.5f) + (P2 * 0.5f);
-  ControlPoint P2P3Midpoint = (P2 * 0.5f) + (P3 * 0.5f);
-  ControlPoint P3P4Midpoint = (P3 * 0.5f) + (P4 * 0.5f);
-
-  return std::vector<ControlPoint>({ P1, P1P2Midpoint,
-    P2, P2P3Midpoint, P3, P3P4Midpoint, P4 });
-}
 
 //Returns point inbetween P1 and P2 
 ControlPoint Project8::LerpControlPoints(ControlPoint& P1, ControlPoint& P2, float t)
@@ -348,114 +209,171 @@ ControlPoint Project8::LerpControlPoints(ControlPoint& P1, ControlPoint& P2, flo
 
 }
 
-/*
-Inputs:
-N = num control points
-s = N - 1
-d = 3 by default, degree value
-Points P0-PN
-knot sequence of size (N + Degree + 1)
-
-
-Interval is [td, tN-d]
-
-ex.
-t3,t(numPoints - 3)
-
-output func gamma(t)
-
-stage p = 0 to p = 3 (d)
-i = J - d + p to J
-
-
-
-
-
-t value ranges from d to N
- */
-
+//proj * view * model * vert
+void Project8::UpdateCamera()
+{
+  projectionMatrix = cameraToNDC(currentCamera, windowX, windowY, nearPlane, farPlane);
+  viewMatrix = worldToCamera(currentCamera);
+}
 
 
 void Project8::CalculatePoints()
 {
-  Project8::points.clear();
-  if (controlPoints.size() == 0 || controlPoints.size() == 1)
-    return;
+  //N = control points size
+  //K = N - 1
+  //D = N + 2
+  points.clear();
 
-  //set of both points in two new vectors
-  SetsOfPoints newPoints;
-  
-  int S = controlPoints.size() - 1;
-  dValue = std::max(0, dValue);
-  dValue = std::min(dValue, S);
-  int N = S + dValue + 1; //N = s + d + 1
-  tValueNLI = std::min(std::max(tValueNLI, float(dValue)), float(N - dValue - 0.001f));
+  int N = controlPoints.size();
+  int K = N - 1;
+  int D = N + 2;
 
-  //construct the div diff table to hold the P[p]i points
-  std::vector<std::vector<ControlPointDouble>> DivDiffTable(S + 1);
+  Mat<double> matrixX(D, D + 1, 0);
 
-  //initialize the first row to the points
-  for (unsigned i = 0; i < S + 1; ++i)
-  {
-    //same initialization as NLI, decreasing size shell
-    DivDiffTable.at(i).resize(S + 1);
 
-  }
+  // create (N + 2) x (N + 3) matrix
 
-  //[0]g = g(0)
-  //the [0] values
-  //set P[0]i for i = 0 to i = s
-  for (unsigned i = 0; i < S + 1; ++i)
-  {
-    DivDiffTable[0][i].x = controlPoints[i].x;
-    DivDiffTable[0][i].y = controlPoints[i].y;
-  }
-
-  //pointShell of 0 is the [0]g values
-  //pointShell of 1 is the [0,1]g values and so in until its just 1 value
-  //the nth vector has the values we want at 0 and end - 1 and the final vector has just 1 value
+  //first 4 terms
 
   /*
-    t exists in [td,tN-d]
-  findJ that t exists in [tJ,tJ+1)
-
+   * form of:
+   * 1, t, t^2, t^3, (t - 1)^3+, (t - 2)^3+, ... , (t - (k - 1))^3+
+   * .
+   * . for all t of integer values [0, k]
+   * .
+   * 0, 0, 2, 0, 0, ... , 0
+   * 0, 0, 2, 6k, 6(t - 1)+, 6(t - 2)+, ... , 6(t - (k - 1))+
    */
 
-   //calculate the [0,1] to [0,1...d] values
-  int J = tValueNLI; //J is an int where the T value is between J and J + 1, ex for t = 5.5, J = 5
-  //int Jmax = N - dValue;
-
-  
-
-  //construct the Newton Form for t values td to tN-d
-  for (unsigned i = 0; i < quality; ++i)
+  matrixX(0, 0) = 1;
+  for (int i = 0; i < N; ++i)
   {
-    //Need the double precision for more than 16 points
+    matrixX(i, 0) = 1;
+    matrixX(i, 1) = i;
+    matrixX(i, 2) = i * i;
+    matrixX(i, 3) = i * i * i;
 
-    //set the t value to the delta t between each point and the quality
-    double t =  (i * double((controlPoints.size() - 1) / double(quality - 1)));
-
-    for (int p = 1; p <= dValue; ++p)
+    for (int j = 4; j < D; ++j)
     {
-      //Shell Loop
-      for (int i = J - dValue + p; i <= J; ++i)
+      //truncated power function
+      if (i < j - 3)
+        matrixX(i, j) = 0;
+      else
+        matrixX(i, j) = pow((i - (j - 3)), 3);
+    }
+  }
+
+  //last 2 rows
+  matrixX(D - 2, 2) = 2;
+  matrixX(D - 1, 2) = 2;
+  matrixX(D - 1, 3) = 6 * K;
+
+  for (int i = 4; i < D; ++i)
+  {
+    //truncated power function where c = i - 3
+    if (K < i - 3)
+      matrixX(D - 1, i) = 0;
+    else
+      matrixX(D - 1, i) = 6.0f * (K - (i - 3.0f));
+  }
+
+  //init matrix to the same because they are the same functions minute the control points
+  Mat<double> matrixY{ matrixX };
+  Mat<double> matrixZ{ matrixX };
+
+  for (int i = 0; i < N; ++i)
+  {
+    matrixX(i, D) = controlPoints3D[i].x;
+    matrixY(i, D) = controlPoints3D[i].y;
+    matrixZ(i, D) = controlPoints3D[i].z;
+
+  }
+
+  /*
+  ImGui::SetNextWindowSize({ 0.f, 0.f });
+  if(ImGui::Begin("Matrix X"))
+  {
+    for(int i = 0; i < D; ++i)
+    {
+      for (int j = 0; j < D + 1; ++j)
       {
-        /*
-         P[p][i] = (t - ti)/(t of (i+d - (p-1)) - ti) * P[p-1][i]
-         */
-         //assuming that knotSequence[J] =
-        DivDiffTable[p][i] =
-          DivDiffTable[p - 1][i] * (((J + t) - knotSequence[i]) /
-          (knotSequence[i + dValue - (p - 1)] - knotSequence[i])) +
-          DivDiffTable[p - 1][i - 1] * ((knotSequence[i + dValue - (p - 1)] - (J + t)) /
-          (knotSequence[i + dValue - (p - 1)] - knotSequence[i]));
+        ImGui::Text(fmt::format("{}", matrixX(i, j)).c_str());
+        if (j != D)
+          ImGui::SameLine();
+      }
+    }
+    ImGui::End();
+  }
+  */
+
+
+  // Set last column of matrix to control point x and y values (can make 2 matrices pretty trivially)
+  matrixX.inplace_rref();
+  matrixY.inplace_rref();
+  matrixZ.inplace_rref();
+
+  // rref to find coefficients a0, a1, a2, a3, b0, b1, ... , bk-1
+
+  // plug in all t values from [0, k] into spline equation to get final points
+
+  double a0x = matrixX(0, D);
+  double a1x = matrixX(1, D);
+  double a2x = matrixX(2, D);
+  double a3x = matrixX(3, D);
+
+  double a0y = matrixY(0, D);
+  double a1y = matrixY(1, D);
+  double a2y = matrixY(2, D);
+  double a3y = matrixY(3, D);
+
+
+  double a0z = matrixZ(0, D);
+  double a1z = matrixZ(1, D);
+  double a2z = matrixZ(2, D);
+  double a3z = matrixZ(3, D);
+
+  std::vector<double> bx;
+  std::vector<double> by;
+  std::vector<double> bz;
+
+  //push back coefficients
+  for (int i = 4; i < D; ++i)
+  {
+    bx.push_back(matrixX(i, D));
+    by.push_back(matrixY(i, D));
+    by.push_back(matrixZ(i, D));
+
+  }
+
+  for (int i = 0; i < quality; ++i)
+  {
+    double t = (i * K) / (quality - 1.0);
+
+    double x = a0x + a1x * t + a2x * t * t + a3x * t * t * t;
+    double y = a0y + a1y * t + a2y * t * t + a3y * t * t * t;
+    double z = a0y + a1z * t + a2z * t * t + a3z * t * t * t;
+
+    for (int j = 0; j < D - 4; ++j)
+    {
+      if (t < j + 1)
+      {
+        x += 0;
+        y += 0;
+        z += 0;
+
+      }
+      else
+      {
+        x += bx[j] * pow((t - (j + 1.0)), 3);
+        y += by[j] * pow((t - (j + 1.0)), 3);
+        z += bz[j] * pow((t - (j + 1.0)), 3);
 
       }
     }
- 
-    //explicately use the imvec2 points
-    Project8::points.push_back(DivDiffTable[dValue][J].ToImVec2());
 
+
+    Project8::points.push_back(glm::vec3{ float(x),  float(y) , float(z)});
   }
 }
+
 

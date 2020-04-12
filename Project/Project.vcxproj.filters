@@ -22,6 +22,9 @@
     <Filter Include="Lib">
       <UniqueIdentifier>{73bcdc02-c612-4004-a575-e3440ea2b706}</UniqueIdentifier>
     </Filter>
+    <Filter Include="3D">
+      <UniqueIdentifier>{7964fce5-8c66-4997-b2d4-b00bc485dd9c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\imgui\imgui.cpp">
@@ -80,6 +83,12 @@
     </ClCompile>
     <ClCompile Include="src\project8.cpp">
       <Filter>Projects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Projection.cpp">
+      <Filter>3D</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Camera.cpp">
+      <Filter>3D</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -193,6 +202,12 @@
     </ClInclude>
     <ClInclude Include="inc\project8.hpp">
       <Filter>Projects</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Projection.h">
+      <Filter>3D</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Camera.h">
+      <Filter>3D</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
