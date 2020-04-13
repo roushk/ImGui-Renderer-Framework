@@ -15,9 +15,9 @@
 Project8::Project8()
 {
   //upper left to lower right
-  ImGui::SetViewRect({ -0.2f, 3.4f }, { 1.2f, -3.4f });
+  ImGui::SetViewRect({ -1.f, 3.4f }, { 1.f, -3.4f });
   reset();
-  currentCamera = Camera({ 0,0,-5 }, { 0,0,-1 }, { 0,1,0 }, 60, 6.8f/1.4f, nearPlane, farPlane);
+  currentCamera = Camera({ 0,0,-5 }, { 0,0,-1 }, { 0,1,0 }, 60, 6.8f/2.f, nearPlane, farPlane);
 }
 
 
@@ -46,6 +46,7 @@ std::string Project8::name()
 void Project8::ResizeControlPoints()
 {
   controlPoints.resize(degree + 1);
+  controlPointZ.resize(degree + 1);
 
   //set x values
   for (unsigned i = 0; i < degree + 1; ++i)
@@ -60,8 +61,6 @@ void Project8::ResizeControlPoints()
 //proj * view * model * vert
 void Project8::UpdateCamera()
 {
-  
-
   projectionMatrix = cameraToNDC(currentCamera, windowX, windowY, nearPlane, farPlane);
   viewMatrix = worldToCamera(currentCamera);
   worldMatrix = worldTranslate * worldRotate * worldScale;
@@ -86,8 +85,8 @@ void Project8::DrawXYZCompass()
   ImVec2 y2D = PerspProj(y + xyzCompassOffset);
   ImVec2 z2D = PerspProj(z + xyzCompassOffset);
 
-  ImGui::RenderLine(o2D, x2D, ImGui::ColorConvertFloat4ToU32(colorRed));  //x axis
-  ImGui::RenderLine(o2D, y2D, ImGui::ColorConvertFloat4ToU32(colorGreen));  //y axis  
+  ImGui::RenderLine(o2D, x2D, ImGui::ColorConvertFloat4ToU32(colorRed));   //x axis
+  ImGui::RenderLine(o2D, y2D, ImGui::ColorConvertFloat4ToU32(colorGreen)); //y axis  
   ImGui::RenderLine(o2D, z2D, ImGui::ColorConvertFloat4ToU32(colorBlue));  //z axis
 
 
@@ -123,6 +122,7 @@ void Project8::draw()
   const ImU32 circleColorHighlightedPacked = ImGui::ColorConvertFloat4ToU32(colorSoftWhiteBlue);
   const ImU32 white = ImGui::ColorConvertFloat4ToU32(colorWhite);
   const ImU32 blue = ImGui::ColorConvertFloat4ToU32(colorSoftBlue);
+  const ImU32 red = ImGui::ColorConvertFloat4ToU32(colorRed);
 
 
   if (drawBox)
@@ -145,6 +145,16 @@ void Project8::draw()
   if (ImGui::ControlPoints(controlPoints, circleRadius, circleColorPacked, circleColorHighlightedPacked, ImGuiControlPointFlags_ClampXY | ImGuiControlPointFlags_AddAndRemoveWithMouse) && controlPoints.size() > 0)
   {
     CalculatePoints();
+    //draw on highlighted point
+  }
+
+  //draw selected circle
+  ImGui::RenderCircle(controlPoints[currentPoint].ToImVec2(), circleRadius + 0.02f, red);
+
+
+  for (unsigned i = 0; i < controlPoints.size(); ++i)
+  {
+    ImGui::RenderCircle(PerspProj({ controlPoints[i].x, controlPoints[i].y, controlPointZ[i] }), circleRadius / 4.0f, circleColorPacked);
   }
 
   /*
@@ -212,9 +222,20 @@ void Project8::draw_editors()
     ImGui::PopStyleVar(2);
   }
 
+  bool changed = false;
   if(displayCameraControls)
   {
-    ImGui::Begin("CameraControls");
+    ImGui::Begin("Controls");
+
+    if(ImGui::SliderInt("Point Selection", &currentPoint, 0, controlPoints.size() - 1))
+    {
+      changed = true;
+    }
+    if(ImGui::SliderFloat("Z Value", &controlPointZ[currentPoint], -5, 5))
+    {
+      changed = true;
+    }
+
     if(ImGui::ButtonEx("Zoom Forward",ImVec2(200,20), ImGuiButtonFlags_Repeat))
     {
       worldScale = glm::scale(worldScale, { 1.01f,1.01f,1.01f });
@@ -227,6 +248,7 @@ void Project8::draw_editors()
 
       worldScale = glm::scale(worldScale, { .99f,.99f,.99f });
       //currentCamera.zoom(1.05f);
+
     }
 
     if(ImGui::ButtonEx("Move -X",ImVec2(200,20), ImGuiButtonFlags_Repeat))
@@ -331,6 +353,7 @@ void Project8::draw_editors()
 
   }
 
+  
   if (oldDegree != degree)
   {
 
@@ -338,6 +361,11 @@ void Project8::draw_editors()
     degree = std::max<int>(degree, 1);
     degree = std::min<int>(degree, maxDegree);
     ResizeControlPoints();
+  }
+
+  if (changed)
+  {
+    CalculatePoints();
   }
 }
 
@@ -379,6 +407,7 @@ void Project8::CalculatePoints()
   //D = N + 2
   points.clear();
 
+  controlPointZ.resize(controlPoints.size());
   int N = controlPoints.size();
   int K = N - 1;
   int D = N + 2;
@@ -440,7 +469,7 @@ void Project8::CalculatePoints()
   {
     matrixX(i, D) = controlPoints[i].x;
     matrixY(i, D) = controlPoints[i].y;
-    matrixZ(i, D) = 0;
+    matrixZ(i, D) = controlPointZ[i];
 
     //matrixX(i, D) = controlPoints3D[i].x;
     //matrixY(i, D) = controlPoints3D[i].y;

@@ -135,7 +135,8 @@ private:
   int circleDivisions = 128;
   //Control point Y value are the coefficents for the Castlawuhdoawoass alg
 
-  std::vector<ControlPoint3D> controlPoints3D{ ControlPoint3D{2.5f, 1.f,0.f}, ControlPoint3D{5.f, 1.f,0.f}, ControlPoint3D{7.5f, 1.f,0.f} };
+  std::vector <float> controlPointZ{ -1,0,1 };
+
   std::vector<ControlPoint> controlPoints{ ControlPoint{2.5f, 1.f}, ControlPoint{5.f, 1.f}, ControlPoint{7.5f, 1.f} };
 
 
@@ -154,11 +155,11 @@ private:
   const ImVec4 colorGreen = { 0.f, 1.f, 0.f, 1.f }; //Y
 
 
-
+  int currentPoint = 0;
 
   Camera currentCamera;
   float windowX = 6.8f;
-  float windowY = 1.4f;
+  float windowY = 2.f;
   float nearPlane = 0.1f;
   float farPlane = 100.f;
 
