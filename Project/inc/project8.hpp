@@ -167,9 +167,9 @@ private:
   glm::mat4 worldMatrix = glm::mat4(1.0f);
 
   //TRS or in matrix order worldScale * worldRotate * worldTranslate
-  glm::mat4 worldScale = glm::mat4(1.0f);;
-  glm::mat4 worldRotate = glm::mat4(1.0f);;
-  glm::mat4 worldTranslate = glm::mat4(1.0f);;
+  glm::mat4 worldScale = glm::mat4(1.0f);
+  glm::mat4 worldRotate = glm::mat4(1.0f);
+  glm::mat4 worldTranslate = glm::mat4(1.0f);
 
 
   glm::vec2 mouseWorldCoords;

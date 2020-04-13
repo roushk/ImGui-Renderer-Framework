@@ -215,35 +215,35 @@ void Project8::draw_editors()
   if(displayCameraControls)
   {
     ImGui::Begin("CameraControls");
-    if (ImGui::Button("Zoom Forward"))
+    if(ImGui::ButtonEx("Zoom Forward",ImVec2(200,20), ImGuiButtonFlags_Repeat))
     {
       worldScale = glm::scale(worldScale, { 1.01f,1.01f,1.01f });
 
       //currentCamera.zoom(0.95f);
     }
     ImGui::SameLine();
-    if (ImGui::Button("Zoom Backward"))
+    if(ImGui::ButtonEx("Zoom Backward",ImVec2(200,20), ImGuiButtonFlags_Repeat))
     {
 
       worldScale = glm::scale(worldScale, { .99f,.99f,.99f });
       //currentCamera.zoom(1.05f);
     }
 
-    if(ImGui::Button("Move -X"))
+    if(ImGui::ButtonEx("Move -X",ImVec2(200,20), ImGuiButtonFlags_Repeat))
     {
       worldTranslate = glm::translate(worldTranslate,{-1 * speed,0,0});
 
       //currentCamera.leftRight(speed);
     }
     ImGui::SameLine();
-    if(ImGui::Button("Move +X"))
+    if(ImGui::ButtonEx("Move +X",ImVec2(200,20), ImGuiButtonFlags_Repeat))
     {
       worldTranslate = glm::translate(worldTranslate, { 1 * speed,0,0 });
 
       //currentCamera.leftRight(-speed);
     }
 
-    if(ImGui::Button("Move -Z"))
+    if(ImGui::ButtonEx("Move -Z",ImVec2(200,20), ImGuiButtonFlags_Repeat))
     {
       worldTranslate = glm::translate(worldTranslate, { 0,0,1 * speed });
 
@@ -251,64 +251,63 @@ void Project8::draw_editors()
     }
 
     ImGui::SameLine();
-    if(ImGui::Button("Move +Z"))
+    if(ImGui::ButtonEx("Move +Z",ImVec2(200,20), ImGuiButtonFlags_Repeat))
     {
       worldTranslate = glm::translate(worldTranslate, { 0,0,-1 * speed });
 
       //currentCamera.forward(speed * 2.0f);
     }
 
-    if(ImGui::Button("Move -Y"))
+    if(ImGui::ButtonEx("Move -Y",ImVec2(200,20), ImGuiButtonFlags_Repeat))
     {
       worldTranslate = glm::translate(worldTranslate, { 0,-1 * speed,0 });
 
       //currentCamera.upDown(-speed * 2.0f);
     }
-
     
     ImGui::SameLine();
-    if(ImGui::Button("Move +Y"))
+    if(ImGui::ButtonEx("Move +Y",ImVec2(200,20), ImGuiButtonFlags_Repeat))
     {
       worldTranslate = glm::translate(worldTranslate, { 0,1 * speed,0 });
 
       //currentCamera.upDown(speed);
     }
 
-    if(ImGui::Button("Rotate Left around Y Axis"))
+    if(ImGui::ButtonEx("Rotate Left around Y Axis",ImVec2(200,20), ImGuiButtonFlags_Repeat))
     {
       worldRotate = glm::rotate(worldRotate, -1.f * speed, { 0,1,0 });
       //currentCamera.yaw(speed * 200.0f);
     }
     ImGui::SameLine();
-    if(ImGui::Button("Rotate Right around Y Axis"))
+    if (ImGui::ButtonEx("Rotate Right around Y Axis",ImVec2(200,20), ImGuiButtonFlags_Repeat))
     {
       worldRotate = glm::rotate(worldRotate, 1.f * speed, { 0,1,0 });
 
       //currentCamera.yaw(-speed * 200.0f);
     }
 
-    if(ImGui::Button("Rotate Up around X Axis"))
+    if (ImGui::ButtonEx("Rotate Up around X Axis",ImVec2(200,20), ImGuiButtonFlags_Repeat))
     {
       worldRotate = glm::rotate(worldRotate, -1.f * speed, { 1,0,0 });
 
       //currentCamera.pitch(speed* 200.0f);
     }
     ImGui::SameLine();
-    if(ImGui::Button("Rotate Down around X Axis"))
+    if(ImGui::ButtonEx("Rotate Down around X Axis", ImVec2(200, 20), ImGuiButtonFlags_Repeat))
     {
       worldRotate = glm::rotate(worldRotate, 1.f * speed, { 1,0,0 });
 
       //currentCamera.pitch(-speed * 200.0f);
     }
 
-    if(ImGui::Button("Roll Left around Z Axis"))
+    if(ImGui::ButtonEx("Roll Left around Z Axis", ImVec2(200, 20), ImGuiButtonFlags_Repeat))
     {
       worldRotate = glm::rotate(worldRotate, 1.f * speed, { 0,0,1 });
 
       //currentCamera.roll(speed * 0.5f);
     }
     ImGui::SameLine();
-    if(ImGui::Button("Roll Right around Z Axis"))
+    if(ImGui::ButtonEx("Roll Right around Z Axis",ImVec2(200,20), ImGuiButtonFlags_Repeat))
     {
       worldRotate = glm::rotate(worldRotate, -1.f * speed, { 0,0,1 });
 
@@ -321,6 +320,13 @@ void Project8::draw_editors()
     {
       currentCamera.ResetRoll();
     }
+    if (ImGui::Button("Reset Model matrix"))
+    {
+      worldScale = glm::mat4(1.0f);
+      worldRotate = glm::mat4(1.0f);
+      worldTranslate = glm::mat4(1.0f);
+    }
+
     ImGui::End();
 
   }
