@@ -87,6 +87,19 @@ public:
   void DrawFunction();
   void CalculatePoints();
 
+  void DrawXYZCompass();
+
+  ImVec2 PerspProj(const glm::vec3& pt)
+  {
+    //proj * view * model * vert
+    
+    glm::vec4 vert = projectionMatrix * viewMatrix * worldMatrix * glm::vec4(pt, 1);
+    
+    //perspective divide
+    vert /= -vert.w;
+    return{ vert.x,vert.y };  
+  }
+
   float BernsteinBasis(int i, int d, float t);
   ControlPoint LerpControlPoints(ControlPoint& P1, ControlPoint& P2, float t = 0.5f);
 
@@ -136,17 +149,28 @@ private:
   const ImVec4 colorWhite = { 1,1,1,1 };
 
 
+  const ImVec4 colorRed =   { 1.f, 0.f, 0.f, 1.f }; //X
+  const ImVec4 colorBlue =  { 0.f, 0.f, 1.f, 1.f }; //Z
+  const ImVec4 colorGreen = { 0.f, 1.f, 0.f, 1.f }; //Y
+
 
 
 
   Camera currentCamera;
-  float windowX = 1;
-  float windowY = 1;
+  float windowX = 6.8f;
+  float windowY = 1.4f;
   float nearPlane = 0.1f;
   float farPlane = 100.f;
 
   glm::mat4 projectionMatrix;
   glm::mat4 viewMatrix;
+  glm::mat4 worldMatrix = glm::mat4(1.0f);
+
+  //TRS or in matrix order worldScale * worldRotate * worldTranslate
+  glm::mat4 worldScale = glm::mat4(1.0f);;
+  glm::mat4 worldRotate = glm::mat4(1.0f);;
+  glm::mat4 worldTranslate = glm::mat4(1.0f);;
+
 
   glm::vec2 mouseWorldCoords;
 

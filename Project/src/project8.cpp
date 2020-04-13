@@ -17,7 +17,7 @@ Project8::Project8()
   //upper left to lower right
   ImGui::SetViewRect({ -0.2f, 3.4f }, { 1.2f, -3.4f });
   reset();
-  currentCamera = Camera({ 0,0,-5 }, { 0,0,-1 }, { 0,1,0 }, 90, 1, nearPlane, farPlane);
+  currentCamera = Camera({ 0,0,-5 }, { 0,0,-1 }, { 0,1,0 }, 60, 6.8f/1.4f, nearPlane, farPlane);
 }
 
 
@@ -64,8 +64,34 @@ void Project8::UpdateCamera()
 
   projectionMatrix = cameraToNDC(currentCamera, windowX, windowY, nearPlane, farPlane);
   viewMatrix = worldToCamera(currentCamera);
+  worldMatrix = worldTranslate * worldRotate * worldScale;
 }
 
+void Project8::DrawXYZCompass()
+{
+  float size = 1.0f;
+  glm::vec3 o = { 0,0,0 };
+  glm::vec3 x = { size,0,0 };
+  glm::vec3 y = { 0,size,0 };
+  glm::vec3 z = { 0,0,size };
+
+  glm::vec3 xyzCompassOffset = { 0,0,0 };
+
+  std::vector<ImVec2> points2D;
+  points2D.reserve(4);
+
+
+  ImVec2 o2D = PerspProj(o + xyzCompassOffset);
+  ImVec2 x2D = PerspProj(x + xyzCompassOffset);
+  ImVec2 y2D = PerspProj(y + xyzCompassOffset);
+  ImVec2 z2D = PerspProj(z + xyzCompassOffset);
+
+  ImGui::RenderLine(o2D, x2D, ImGui::ColorConvertFloat4ToU32(colorRed));  //x axis
+  ImGui::RenderLine(o2D, y2D, ImGui::ColorConvertFloat4ToU32(colorGreen));  //y axis  
+  ImGui::RenderLine(o2D, z2D, ImGui::ColorConvertFloat4ToU32(colorBlue));  //z axis
+
+
+}
 
 
 void Project8::DrawFunction()
@@ -75,16 +101,7 @@ void Project8::DrawFunction()
 
   for(auto& pt: points)
   {
-    //proj * view * model * vert
-    //vert /= vert.w
-
-
-    //persp proj cpu side
-    glm::vec4 vert = projectionMatrix * viewMatrix * glm::vec4(pt,1);
-
-    //perspective divide
-    vert /= -vert.w;
-    points2D.push_back({ vert.x,vert.y });
+    points2D.push_back(PerspProj(pt));
   }
 
   for (unsigned i = 1; i < points.size(); ++i)
@@ -98,6 +115,7 @@ void Project8::draw()
 {
 
   UpdateCamera();
+  DrawXYZCompass();
 
   // Basic colors that work well with the background
   const ImU32 boxColorPacked = ImGui::ColorConvertFloat4ToU32(colorSoftLightGray);
@@ -197,69 +215,107 @@ void Project8::draw_editors()
   if(displayCameraControls)
   {
     ImGui::Begin("CameraControls");
-   
-    if(ImGui::Button("Pan Left"))
+    if (ImGui::Button("Zoom Forward"))
     {
-      currentCamera.leftRight(speed);
+      worldScale = glm::scale(worldScale, { 1.01f,1.01f,1.01f });
+
+      //currentCamera.zoom(0.95f);
     }
     ImGui::SameLine();
-    if(ImGui::Button("Pan Right"))
+    if (ImGui::Button("Zoom Backward"))
     {
-      currentCamera.leftRight(-speed);
+
+      worldScale = glm::scale(worldScale, { .99f,.99f,.99f });
+      //currentCamera.zoom(1.05f);
     }
 
-    if(ImGui::Button("Pan Forward"))
+    if(ImGui::Button("Move -X"))
     {
-      currentCamera.forward(-speed);
+      worldTranslate = glm::translate(worldTranslate,{-1 * speed,0,0});
+
+      //currentCamera.leftRight(speed);
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("Move +X"))
+    {
+      worldTranslate = glm::translate(worldTranslate, { 1 * speed,0,0 });
+
+      //currentCamera.leftRight(-speed);
+    }
+
+    if(ImGui::Button("Move -Z"))
+    {
+      worldTranslate = glm::translate(worldTranslate, { 0,0,1 * speed });
+
+      //currentCamera.forward(-speed);
     }
 
     ImGui::SameLine();
-    if(ImGui::Button("Pan Backward"))
+    if(ImGui::Button("Move +Z"))
     {
-      currentCamera.forward(speed * 2.0f);
+      worldTranslate = glm::translate(worldTranslate, { 0,0,-1 * speed });
+
+      //currentCamera.forward(speed * 2.0f);
     }
 
-    if(ImGui::Button("Pan Up"))
+    if(ImGui::Button("Move -Y"))
     {
-      currentCamera.upDown(-speed * 2.0f);
+      worldTranslate = glm::translate(worldTranslate, { 0,-1 * speed,0 });
+
+      //currentCamera.upDown(-speed * 2.0f);
     }
 
     
     ImGui::SameLine();
-    if(ImGui::Button("Pan Down"))
+    if(ImGui::Button("Move +Y"))
     {
-      currentCamera.upDown(speed);
+      worldTranslate = glm::translate(worldTranslate, { 0,1 * speed,0 });
+
+      //currentCamera.upDown(speed);
     }
 
-    if(ImGui::Button("Rotate Left"))
+    if(ImGui::Button("Rotate Left around Y Axis"))
     {
-      currentCamera.yaw(speed * 2.0f);
+      worldRotate = glm::rotate(worldRotate, -1.f * speed, { 0,1,0 });
+      //currentCamera.yaw(speed * 200.0f);
     }
     ImGui::SameLine();
-    if(ImGui::Button("Rotate Right"))
+    if(ImGui::Button("Rotate Right around Y Axis"))
     {
-      currentCamera.yaw(-speed * 2.0f);
+      worldRotate = glm::rotate(worldRotate, 1.f * speed, { 0,1,0 });
+
+      //currentCamera.yaw(-speed * 200.0f);
     }
 
-    if(ImGui::Button("Rotate Up"))
+    if(ImGui::Button("Rotate Up around X Axis"))
     {
-      currentCamera.pitch(speed* 2.0f);
+      worldRotate = glm::rotate(worldRotate, -1.f * speed, { 1,0,0 });
+
+      //currentCamera.pitch(speed* 200.0f);
     }
     ImGui::SameLine();
-    if(ImGui::Button("Rotate Down"))
+    if(ImGui::Button("Rotate Down around X Axis"))
     {
-      currentCamera.pitch(-speed * 2.0f);
+      worldRotate = glm::rotate(worldRotate, 1.f * speed, { 1,0,0 });
+
+      //currentCamera.pitch(-speed * 200.0f);
     }
 
-    if(ImGui::Button("Roll Left"))
+    if(ImGui::Button("Roll Left around Z Axis"))
     {
-      currentCamera.roll(speed * 0.5f);
+      worldRotate = glm::rotate(worldRotate, 1.f * speed, { 0,0,1 });
+
+      //currentCamera.roll(speed * 0.5f);
     }
     ImGui::SameLine();
-    if(ImGui::Button("Roll Right"))
+    if(ImGui::Button("Roll Right around Z Axis"))
     {
-      currentCamera.roll(-speed * 0.5f);
+      worldRotate = glm::rotate(worldRotate, -1.f * speed, { 0,0,1 });
+
+      //currentCamera.roll(-speed * 0.5f);
     }
+
+
 
     if (ImGui::Button("Reset Roll"))
     {
@@ -294,9 +350,6 @@ void Project8::draw_menus()
 
   // Add more ImGui::BeginMenu(...) for additional menus
 }
-
-
-
 
 float Project8::BernsteinBasis(int i, int d, float t)
 {
@@ -475,5 +528,7 @@ void Project8::CalculatePoints()
     Project8::points.push_back(glm::vec3{ float(x),  float(y) , float(z)});
   }
 }
+
+
 
 
