@@ -192,9 +192,9 @@ void Project8::draw()
 
 void Project8::draw_editors()
 {
-  
+  static float speedVal = 100;
   float dt = ImGui::GetIO().DeltaTime;
-  const float speed = 10.0f * dt;
+  const float speed = speedVal * dt;
 
   int oldDegree = degree;
   static ImVec2 windowSize; // Default initializes to { 0, 0 }
@@ -235,6 +235,8 @@ void Project8::draw_editors()
     {
       changed = true;
     }
+    ImGui::DragFloat("Speed Value", &speedVal, 0.5, 0.1, 1000);
+    
 
     if(ImGui::ButtonEx("Zoom Forward",ImVec2(200,20), ImGuiButtonFlags_Repeat))
     {
