@@ -151,10 +151,19 @@ void Project8::draw()
   //draw selected circle
   ImGui::RenderCircle(controlPoints[currentPoint].ToImVec2(), circleRadius + 0.02f, red);
 
+  ImGui::RenderCircleFilled(PerspProj({ controlPoints[currentPoint].x, controlPoints[currentPoint].y, 
+    controlPointZ[currentPoint] }), circleRadius / 4.0f + 0.01f, red);
+
 
   for (unsigned i = 0; i < controlPoints.size(); ++i)
   {
     ImGui::RenderCircle(PerspProj({ controlPoints[i].x, controlPoints[i].y, controlPointZ[i] }), circleRadius / 4.0f, circleColorPacked);
+  }
+
+  for (unsigned i = 0; i < controlPoints.size() - 1; ++i)
+  {
+    ImGui::RenderLine(PerspProj({ controlPoints[i].x, controlPoints[i].y, controlPointZ[i] }),
+      PerspProj({ controlPoints[i + 1].x, controlPoints[i + 1].y, controlPointZ[i + 1] }), white, lineThickness);
   }
 
   /*
