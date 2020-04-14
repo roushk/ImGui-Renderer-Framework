@@ -158,8 +158,8 @@ private:
   int currentPoint = 0;
 
   Camera currentCamera;
-  float windowX = 6.8f;
-  float windowY = 2.f;
+  float windowX = 8.f;
+  float windowY = 6.f;
   float nearPlane = 0.1f;
   float farPlane = 100.f;
 

@@ -15,9 +15,9 @@
 Project8::Project8()
 {
   //upper left to lower right
-  ImGui::SetViewRect({ -1.f, 3.4f }, { 1.f, -3.4f });
+  ImGui::SetViewRect({ -3.f, 4.f }, { 3.f, -4.f });
   reset();
-  currentCamera = Camera({ 0,0,-5 }, { 0,0,-1 }, { 0,1,0 }, 60, 6.8f/2.f, nearPlane, farPlane);
+  currentCamera = Camera({ 0,0,-5 }, { 0,0,-1 }, { 0,1,0 }, 20, 4.f/3.f, nearPlane, farPlane);
 }
 
 
@@ -337,11 +337,6 @@ void Project8::draw_editors()
     }
 
 
-
-    if (ImGui::Button("Reset Roll"))
-    {
-      currentCamera.ResetRoll();
-    }
     if (ImGui::Button("Reset Model matrix"))
     {
       worldScale = glm::mat4(1.0f);
